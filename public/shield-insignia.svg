@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- Outer Tactical Hex-Shield -->
+  <polygon points="50,6 88,24 88,68 50,94 12,68 12,24" stroke="#596B3A" stroke-width="3" fill="#101B13" />
+  <!-- Inner Tactical Contour -->
+  <polygon points="50,14 80,29 80,63 50,86 20,63 20,29" stroke="#263F2B" stroke-width="2" fill="#0C160F" />
+  
+  <!-- Stylized V / Y Intersection (Military Green & Khaki) -->
+  <!-- Left wing of V -->
+  <path d="M28 32 L50 64 L50 80" stroke="#B5A47A" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />
+  <!-- Right wing of V -->
+  <path d="M72 32 L50 64" stroke="#B5A47A" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />
+  <!-- Central Vertical Apex Axis (Y branch) -->
+  <path d="M50 20 L50 44" stroke="#596B3A" stroke-width="3" stroke-linecap="round" />
+  
+  <!-- Tactical Grid Target Crosshairs -->
+  <circle cx="50" cy="50" r="3.5" fill="#B5A47A" />
+  <line x1="42" y1="50" x2="46" y2="50" stroke="#596B3A" stroke-width="1.5" />
+  <line x1="54" y1="50" x2="58" y2="50" stroke="#596B3A" stroke-width="1.5" />
+  <line x1="50" y1="42" x2="50" y2="46" stroke="#596B3A" stroke-width="1.5" />
+  <line x1="50" y1="54" x2="50" y2="58" stroke="#596B3A" stroke-width="1.5" />
+</svg>
