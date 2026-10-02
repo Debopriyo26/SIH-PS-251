@@ -36,6 +36,13 @@ function MainAppContent() {
     );
   }
 
+  // Auto-switch to dashboard upon successful authentication if on public auth pages
+  React.useEffect(() => {
+    if (isAuthenticated && (currentTab === 'landing' || currentTab === 'login' || currentTab === 'signup' || currentTab === 'forgot-password')) {
+      setCurrentTab('dashboard');
+    }
+  }, [isAuthenticated, currentTab]);
+
   // Routing and protected access control
   const renderPage = () => {
     // Public routes
