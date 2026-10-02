@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { TacticalMap } from '../components/map/TacticalMap';
-import { TacticalCard } from '../components/common/TacticalCard';
 import { StatusBadge } from '../components/common/StatusBadge';
 import { inventoryService } from '../services/inventoryService';
 import { LocationNode } from '../types';
-import { MapPin, Navigation, ArrowRight, Shield, CloudRain, AlertTriangle, Info } from 'lucide-react';
+import { MapPin, ArrowRight } from 'lucide-react';
 import { NavTab } from '../components/layout/Header';
-import { PUBLIC_DATA_DISCLAIMER } from '../services/demoData';
 
 interface LocationsPageProps {
   onNavigate: (tab: NavTab) => void;
@@ -45,24 +43,24 @@ export const LocationsPage: React.FC<LocationsPageProps> = ({
   });
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#1A2C1E] pb-4">
+    <div className="space-y-5">
+      {/* Header & Clean Filters */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#1A2C1E] pb-3">
         <div>
           <h1 className="font-tactical text-2xl font-bold tracking-wider text-[#E7E9E2] uppercase flex items-center gap-2.5">
             <span className="w-2.5 h-6 bg-[#B5A47A] inline-block"></span>
             Logistics Map
           </h1>
           <p className="font-mono text-xs text-[#8B9B8E] mt-0.5">
-            Interactive geographic view of demonstration logistics zones, readiness states, and weather conditions
+            Select a logistics demonstration zone to view supply status
           </p>
         </div>
 
-        {/* Simplified Filters as per requirement 10 */}
+        {/* Clean Filter Buttons */}
         <div className="flex items-center gap-1.5 bg-[#101B13] p-1 rounded-xs border border-[#263F2B] font-mono text-xs">
           {[
             { id: 'ALL' as const, label: 'All Zones' },
-            { id: 'RISK' as const, label: 'At Risk' },
+            { id: 'RISK' as const, label: 'Needs Attention' },
             { id: 'WEATHER' as const, label: 'Weather Risk' },
           ].map((btn) => (
             <button
@@ -80,9 +78,9 @@ export const LocationsPage: React.FC<LocationsPageProps> = ({
         </div>
       </div>
 
-      {/* Main Map & Selected Location Details Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Large Map (8 Cols) */}
+      {/* Main Map + Side Zone Inspector */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        {/* Large Clean Map (8 Cols) */}
         <div className="lg:col-span-8">
           <TacticalMap
             locations={filteredLocations}
@@ -92,47 +90,41 @@ export const LocationsPage: React.FC<LocationsPageProps> = ({
               if (onSelectLocationForDetail) onSelectLocationForDetail(loc);
               onNavigate('supplies');
             }}
-            className="h-[520px]"
+            className="h-[520px] rounded-xs border border-[#263F2B]"
           />
         </div>
 
-        {/* Selected Location Information Panel (4 Cols) */}
+        {/* Selected Zone Summary (4 Cols) */}
         <div className="lg:col-span-4 space-y-4">
           {activeLocation ? (
-            <div className="tactical-border bg-[#101B13] border border-[#263F2B] p-5 rounded-sm shadow-xl space-y-4 font-mono text-xs">
+            <div className="bg-[#101B13] border border-[#263F2B] p-5 rounded-xs shadow-md space-y-4 font-mono text-xs">
               <div className="flex items-start justify-between border-b border-[#1A2C1E] pb-3">
                 <div>
                   <span className="text-[10px] text-[#B5A47A] uppercase font-bold tracking-wider block">
-                    SELECTED DEMONSTRATION ZONE
+                    SELECTED ZONE
                   </span>
                   <h3 className="font-tactical font-bold text-base text-[#E7E9E2]">
                     {activeLocation.name}
                   </h3>
-                  <span className="text-[11px] text-[#8B9B8E]">
-                    {activeLocation.region} • {activeLocation.altitude_m}m altitude
-                  </span>
+                  <span className="text-[11px] text-[#8B9B8E]">{activeLocation.region}</span>
                 </div>
                 <StatusBadge status={activeLocation.status} />
               </div>
 
-              <div className="space-y-2.5">
+              {/* 3 Core Stats */}
+              <div className="space-y-2">
                 <div className="p-2.5 bg-[#07100B] border border-[#1A2C1E] rounded-xs flex justify-between items-center">
                   <span className="text-[#8B9B8E]">Supply Readiness:</span>
                   <strong className="text-sm text-[#E7E9E2]">{activeLocation.inventory_readiness_pct}%</strong>
                 </div>
 
                 <div className="p-2.5 bg-[#07100B] border border-[#1A2C1E] rounded-xs flex justify-between items-center">
-                  <span className="text-[#8B9B8E]">Weather Risk:</span>
+                  <span className="text-[#8B9B8E]">Weather Status:</span>
                   <StatusBadge status={activeLocation.weather_risk} size="sm" />
                 </div>
 
                 <div className="p-2.5 bg-[#07100B] border border-[#1A2C1E] rounded-xs flex justify-between items-center">
-                  <span className="text-[#8B9B8E]">Transport Availability:</span>
-                  <strong className="text-[#E7E9E2]">{activeLocation.transport_availability_pct}%</strong>
-                </div>
-
-                <div className="p-2.5 bg-[#07100B] border border-[#1A2C1E] rounded-xs flex justify-between items-center">
-                  <span className="text-[#8B9B8E]">Days of Cover Remaining:</span>
+                  <span className="text-[#8B9B8E]">Days of Cover:</span>
                   <strong className={activeLocation.days_of_cover < 8 ? 'text-[#f87171] font-bold' : 'text-[#4ade80] font-bold'}>
                     {activeLocation.days_of_cover} Days
                   </strong>
@@ -146,12 +138,7 @@ export const LocationsPage: React.FC<LocationsPageProps> = ({
                 </div>
               </div>
 
-              {activeLocation.notes && (
-                <div className="p-3 bg-[#07100B] border border-[#1A2C1E] rounded-xs text-[11px] text-[#8B9B8E] leading-relaxed">
-                  {activeLocation.notes}
-                </div>
-              )}
-
+              {/* Action Button */}
               <button
                 onClick={() => {
                   if (onSelectLocationForDetail) onSelectLocationForDetail(activeLocation);
@@ -159,59 +146,39 @@ export const LocationsPage: React.FC<LocationsPageProps> = ({
                 }}
                 className="w-full py-2.5 bg-[#263F2B] hover:bg-[#325338] text-[#E7E9E2] border border-[#596B3A] rounded-xs font-tactical text-xs tracking-wider uppercase flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
-                <span>VIEW SUPPLIES IN THIS ZONE</span>
+                <span>View Zone Supplies</span>
                 <ArrowRight className="w-3.5 h-3.5 text-[#B5A47A]" />
               </button>
             </div>
           ) : (
-            <div className="tactical-border bg-[#101B13] border border-[#263F2B] p-8 text-center text-[#8B9B8E] font-mono text-xs rounded-sm">
-              Select a location on the map to inspect details.
+            <div className="bg-[#101B13] border border-[#263F2B] p-6 text-center text-[#8B9B8E] font-mono text-xs rounded-xs">
+              Click any marker on the map to inspect zone.
             </div>
           )}
+
+          {/* Quick Zone Picker Chips */}
+          <div className="bg-[#101B13] border border-[#263F2B] p-3 rounded-xs space-y-2 font-mono text-xs">
+            <span className="text-[10px] text-[#8B9B8E] uppercase tracking-wider block font-bold">
+              QUICK SWITCH:
+            </span>
+            <div className="grid grid-cols-2 gap-1.5">
+              {locations.map((loc) => (
+                <button
+                  key={loc.id}
+                  onClick={() => onLocationChange(loc.id)}
+                  className={`p-2 text-left rounded-xs border text-[11px] truncate cursor-pointer transition-colors ${
+                    selectedLocationId === loc.id
+                      ? 'bg-[#263F2B] border-[#596B3A] text-[#E7E9E2] font-semibold'
+                      : 'bg-[#07100B] border-[#1A2C1E] text-[#8B9B8E] hover:text-[#E7E9E2]'
+                  }`}
+                >
+                  {loc.name.replace(' Logistics Zone', '').replace(' Logistics Base', '')}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Location List Below Map */}
-      <TacticalCard
-        title="Demonstration Logistics Zones Summary"
-        subtitle="Public geographical regions used for demonstration modeling"
-      >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 font-mono text-xs">
-          {locations.map((loc) => (
-            <div
-              key={loc.id}
-              onClick={() => onLocationChange(loc.id)}
-              className={`p-4 rounded-xs border cursor-pointer transition-all ${
-                selectedLocationId === loc.id
-                  ? 'bg-[#263F2B] border-[#596B3A] shadow-md'
-                  : 'bg-[#07100B] border-[#1A2C1E] hover:border-[#263F2B]'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-tactical font-semibold text-xs text-[#E7E9E2]">
-                  {loc.name}
-                </span>
-                <StatusBadge status={loc.status} size="sm" />
-              </div>
-
-              <div className="space-y-1 text-[11px] text-[#8B9B8E]">
-                <div className="flex justify-between">
-                  <span>Readiness:</span>
-                  <strong className="text-[#E7E9E2]">{loc.inventory_readiness_pct}%</strong>
-                </div>
-                <div className="flex justify-between">
-                  <span>Weather:</span>
-                  <span className={loc.weather_risk === 'LOW' ? 'text-[#4ade80]' : 'text-[#fbbf24]'}>{loc.weather_risk}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Days of Cover:</span>
-                  <strong className={loc.days_of_cover < 8 ? 'text-[#f87171]' : 'text-[#4ade80]'}>{loc.days_of_cover}d</strong>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </TacticalCard>
     </div>
   );
 };
