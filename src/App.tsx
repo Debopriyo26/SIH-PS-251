@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './lib/authContext';
 import { Header, NavTab } from './components/layout/Header';
 import { VyomixAssistModal } from './components/assistant/VyomixAssistModal';
@@ -24,6 +24,13 @@ function MainAppContent() {
   const [selectedLocationForDetail, setSelectedLocationForDetail] = useState<LocationNode | null>(null);
   const [isAssistOpen, setIsAssistOpen] = useState(false);
 
+  // Auto-switch to dashboard upon successful authentication if on public auth pages
+  useEffect(() => {
+    if (isAuthenticated && (currentTab === 'landing' || currentTab === 'login' || currentTab === 'signup' || currentTab === 'forgot-password')) {
+      setCurrentTab('dashboard');
+    }
+  }, [isAuthenticated, currentTab]);
+
   // If loading session, show subtle loading state
   if (isLoading) {
     return (
@@ -35,13 +42,6 @@ function MainAppContent() {
       </div>
     );
   }
-
-  // Auto-switch to dashboard upon successful authentication if on public auth pages
-  React.useEffect(() => {
-    if (isAuthenticated && (currentTab === 'landing' || currentTab === 'login' || currentTab === 'signup' || currentTab === 'forgot-password')) {
-      setCurrentTab('dashboard');
-    }
-  }, [isAuthenticated, currentTab]);
 
   // Routing and protected access control
   const renderPage = () => {
