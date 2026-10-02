@@ -5,7 +5,7 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 class AlertService {
   private localAlerts: AlertItem[] = [...DEMO_ALERTS];
 
-  public async getAlerts(filterSeverity?: AlertSeverity, filterType?: AlertType): Promise<AlertItem[]> {
+  public async getAlerts(locationId?: string, filterSeverity?: AlertSeverity, filterType?: AlertType): Promise<AlertItem[]> {
     if (isSupabaseConfigured && supabase) {
       try {
         let query = supabase
@@ -13,6 +13,7 @@ class AlertService {
           .select('*, locations(name), supplies(name, category)')
           .order('created_at', { ascending: false });
 
+        if (locationId && locationId !== 'ALL') query = query.eq('location_id', locationId);
         if (filterSeverity) query = query.eq('severity', filterSeverity);
         if (filterType) query = query.eq('alert_type', filterType);
 
@@ -20,10 +21,10 @@ class AlertService {
         if (!error && data && data.length > 0) {
           return data.map((a: any) => ({
             id: a.id,
-            alert_type: a.alert_type,
-            severity: a.severity,
+            alert_type: a.alert_type as AlertType,
+            severity: a.severity as AlertSeverity,
             location_id: a.location_id,
-            location_name: a.locations?.name || 'Tactical Node',
+            location_name: a.locations?.name || 'Logistics Zone',
             supply_id: a.supply_id,
             supply_name: a.supplies?.name,
             category: a.supplies?.category,
@@ -37,11 +38,12 @@ class AlertService {
           }));
         }
       } catch (err) {
-        console.warn('Supabase alert fetch error, falling back to demo alerts:', err);
+        console.warn('Supabase alert fetch error, falling back to demonstration alerts:', err);
       }
     }
 
     let result = [...this.localAlerts];
+    if (locationId && locationId !== 'ALL') result = result.filter(a => a.location_id === locationId);
     if (filterSeverity) result = result.filter(a => a.severity === filterSeverity);
     if (filterType) result = result.filter(a => a.alert_type === filterType);
     return result;

@@ -2,9 +2,8 @@ import { SimulationParams, SimulationOutcome, SupplyCategory, RiskLevel } from '
 
 class SimulatorService {
   public runSimulation(params: SimulationParams): SimulationOutcome {
-    const { demandChangePct, transportAvailPct, weatherSeverity, rainfallMm, inventoryStartingPct } = params;
+    const { demandChangePct, transportAvailPct, weatherSeverity, inventoryStartingPct } = params;
 
-    // Multipliers
     const demandMultiplier = 1 + demandChangePct / 100;
     const inventoryMultiplier = inventoryStartingPct / 100;
     const transportPenalty = Math.max(0.2, 1 + transportAvailPct / 100);
@@ -13,11 +12,10 @@ class SimulatorService {
       LOW: 1.0,
       MODERATE: 1.15,
       HIGH: 1.35,
-      CRITICAL: 1.65,
+      CRITICAL: 1.6,
     };
-    const weatherMult = weatherPenaltyMap[weatherSeverity] * (1 + rainfallMm / 200);
+    const weatherMult = weatherPenaltyMap[weatherSeverity];
 
-    // Baseline categories with stock & daily burn
     const categories: {
       category: SupplyCategory;
       baselineStock: number;
@@ -36,8 +34,7 @@ class SimulatorService {
     const affectedCategories: SupplyCategory[] = [];
     const categoryResults = categories.map(cat => {
       const simulatedStock = cat.baselineStock * inventoryMultiplier;
-      // High weather and demand increases daily consumption burn
-      const simulatedDailyBurn = cat.dailyConsumption * demandMultiplier * (weatherSeverity === 'HIGH' || weatherSeverity === 'CRITICAL' ? 1.15 : 1.0);
+      const simulatedDailyBurn = cat.dailyConsumption * demandMultiplier * weatherMult;
       const simulatedDaysOfCover = simulatedDailyBurn > 0 ? Number((simulatedStock / simulatedDailyBurn).toFixed(1)) : 999;
 
       let baselineRisk: RiskLevel = 'LOW';
@@ -47,20 +44,19 @@ class SimulatorService {
       let simulatedRisk: RiskLevel = 'LOW';
       let stressFactor = 'Normal operational tolerance';
 
-      // Effective cover considering replenishment delays due to transport reduction
       const effectiveReplenishmentDays = 4 / transportPenalty;
 
       if (simulatedDaysOfCover < effectiveReplenishmentDays || simulatedDaysOfCover < 4.0) {
         simulatedRisk = 'CRITICAL';
-        stressFactor = `Severe depletion: Stock exhausts in ${simulatedDaysOfCover}d before delayed transport (${effectiveReplenishmentDays.toFixed(1)}d) can arrive`;
+        stressFactor = `Severe depletion: Stock depletes in ${simulatedDaysOfCover}d before delayed transport (${effectiveReplenishmentDays.toFixed(1)}d) arrives`;
         affectedCategories.push(cat.category);
       } else if (simulatedDaysOfCover < 8.0) {
         simulatedRisk = 'HIGH';
-        stressFactor = `Stress threshold breached: Days of cover reduced by ${Math.round((1 - simulatedDaysOfCover / cat.baselineDays) * 100)}% under surge`;
+        stressFactor = `Threshold breached: Days of cover reduced by ${Math.round((1 - simulatedDaysOfCover / cat.baselineDays) * 100)}%`;
         if (!affectedCategories.includes(cat.category)) affectedCategories.push(cat.category);
       } else if (simulatedDaysOfCover < 12.0) {
         simulatedRisk = 'MODERATE';
-        stressFactor = 'Adequate reserve, but safety threshold cushion narrowing';
+        stressFactor = 'Adequate reserve, safety cushion narrowing';
       }
 
       const shortageUnits = Math.max(0, Math.round(cat.safetyThreshold - (simulatedStock - simulatedDailyBurn * 7)));
@@ -77,7 +73,6 @@ class SimulatorService {
       };
     });
 
-    // Overall risk rollup
     let simulatedRisk: RiskLevel = 'LOW';
     if (categoryResults.some(c => c.simulatedRisk === 'CRITICAL')) {
       simulatedRisk = 'CRITICAL';
@@ -87,29 +82,29 @@ class SimulatorService {
       simulatedRisk = 'MODERATE';
     }
 
-    const baselineReadiness = 82;
+    const baselineReadiness = 85;
     const penalty = (demandChangePct > 0 ? demandChangePct * 0.25 : 0) +
                     (transportAvailPct < 0 ? Math.abs(transportAvailPct) * 0.35 : 0) +
-                    (weatherSeverity === 'CRITICAL' ? 22 : weatherSeverity === 'HIGH' ? 14 : weatherSeverity === 'MODERATE' ? 6 : 0) +
+                    (weatherSeverity === 'CRITICAL' ? 20 : weatherSeverity === 'HIGH' ? 12 : weatherSeverity === 'MODERATE' ? 5 : 0) +
                     (inventoryStartingPct < 100 ? (100 - inventoryStartingPct) * 0.3 : 0);
 
-    const simulatedReadiness = Math.max(32, Math.round(baselineReadiness - penalty));
+    const simulatedReadiness = Math.max(30, Math.round(baselineReadiness - penalty));
 
     const recommendations: string[] = [];
     if (affectedCategories.includes('Fuel')) {
-      recommendations.push('Immediate pre-positioning of heavy bowser TR-001 with 8,000L POL reserve to Distribution Node Alpha.');
+      recommendations.push('Pre-position heavy transport carrier TR-001 with 8,000L POL reserve to Srinagar Logistics Zone.');
     }
     if (affectedCategories.includes('Medical')) {
-      recommendations.push('Authorize priority cold-chain aerial or 4x4 dispatch of trauma kits to offset high burn rate.');
+      recommendations.push('Authorize priority express medical kit replenishment from Ahmedabad Logistics Base.');
+    }
+    if (affectedCategories.includes('Water')) {
+      recommendations.push('Reassign bulk water purification assets to Kutch Logistics Zone.');
     }
     if (transportAvailPct < -20) {
-      recommendations.push('Mobilize Falcon Convoy Unit (24T capacity) from Central Reserve to compensate for regional transit deficit.');
-    }
-    if (weatherSeverity === 'HIGH' || weatherSeverity === 'CRITICAL' || rainfallMm > 30) {
-      recommendations.push(`Apply 40% transit buffer on high-altitude passes; restrict night movement across flooded sectors.`);
+      recommendations.push('Mobilize Heavy Convoy Unit Falcon to compensate for regional transit deficit.');
     }
     if (recommendations.length === 0) {
-      recommendations.push('Maintain current routine replenishment schedules. No critical escalation required.');
+      recommendations.push('Standard replenishment cycle is sufficient. No escalation required.');
     }
 
     return {

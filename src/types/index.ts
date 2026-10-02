@@ -1,16 +1,33 @@
 // ==============================================================================
-// VYOMIX Tactical Logistics Domain Types
-// Problem Statement: SIH2625 | Indian Army Predictive Logistics
+// VYOMIX — Predictive Logistics Intelligence
+// Domain Types & Data Contracts
 // ==============================================================================
 
-export type LocationType = 'Supply Hub' | 'Distribution Node' | 'Forward Node' | 'Transit Depot';
+export type LocationType = 'Logistics Zone' | 'Logistics Base' | 'Transit Depot';
 export type NodeStatus = 'operational' | 'attention' | 'critical';
 export type RiskLevel = 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL';
 export type WarningLevel = 'GREEN' | 'YELLOW' | 'ORANGE' | 'RED';
 export type SupplyCategory = 'Food' | 'Fuel' | 'Medical' | 'Water' | 'General Supplies';
 export type TransportAvailability = 'AVAILABLE' | 'IN_TRANSIT' | 'MAINTENANCE' | 'UNAVAILABLE';
-export type AlertType = 'PREDICTIVE SHORTAGE' | 'WEATHER WARNING' | 'INVENTORY ALERT' | 'TRANSPORT ALERT' | 'SYSTEM ALERT';
+export type AlertType = 'Predictive Shortage' | 'Weather' | 'Inventory' | 'Transport' | 'System';
 export type AlertSeverity = 'INFO' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+export type DataMode = 'LIVE' | 'DEMO' | 'OFFLINE';
+
+export interface DataStatusInfo {
+  mode: DataMode;
+  source: string;
+  lastUpdated?: string;
+  message?: string;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  fullName: string;
+  role: string;
+  avatarUrl?: string;
+}
 
 export interface LocationNode {
   id: string;
@@ -25,6 +42,7 @@ export interface LocationNode {
   inventory_readiness_pct: number;
   weather_risk: RiskLevel;
   transport_availability_pct: number;
+  days_of_cover: number;
   projected_shortage: string;
   notes?: string;
 }
@@ -56,18 +74,6 @@ export interface InventoryRecord {
   location?: LocationNode;
 }
 
-export interface ConsumptionHistoryPoint {
-  id: string;
-  location_id: string;
-  supply_id: string;
-  record_date: string;
-  quantity_consumed: number;
-  troop_strength: number;
-  temperature_c: number;
-  rainfall_mm: number;
-  weather_condition: string;
-}
-
 export interface WeatherObservation {
   id: string;
   location_id: string;
@@ -81,7 +87,8 @@ export interface WeatherObservation {
   visibility_km: number;
   warning_level: WarningLevel;
   warning_text: string;
-  source: 'IMD' | 'OpenWeather' | 'Demo' | string;
+  source: string;
+  is_live: boolean;
 }
 
 export interface WeatherForecastDay {
@@ -130,7 +137,9 @@ export interface ForecastSummary {
   currentStock: number;
   projectedDemand: number;
   safetyThreshold: number;
-  confidenceScore: number;
+  confidenceScore?: number;
+  isModelCalculated: boolean;
+  modelLabel: string;
   riskLevel: RiskLevel;
   riskReasons: string[];
   points: DemandForecastPoint[];
@@ -162,18 +171,18 @@ export interface DataSourceStatus {
   endpoint_url: string;
   status: 'CONNECTED' | 'AVAILABLE' | 'OPTIONAL' | 'OFFLINE';
   last_sync_at: string;
-  last_failure_at?: string;
   records_ingested: number;
   latency_ms: number;
+  purpose: string;
+  source: string;
   notes: string;
 }
 
 export interface SimulationParams {
-  demandChangePct: number; // e.g. +20, -15
-  transportAvailPct: number; // e.g. -30
+  demandChangePct: number;
+  transportAvailPct: number;
   weatherSeverity: 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL';
-  rainfallMm: number;
-  inventoryStartingPct: number; // e.g. 100% or 80%
+  inventoryStartingPct: number;
 }
 
 export interface SimulationCategoryResult {

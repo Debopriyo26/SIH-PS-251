@@ -16,7 +16,7 @@ class InventoryService {
             locations (*)
           `);
         
-        if (locationId) {
+        if (locationId && locationId !== 'ALL') {
           query = query.eq('location_id', locationId);
         }
 
@@ -39,11 +39,11 @@ class InventoryService {
           }));
         }
       } catch (err) {
-        console.warn('Supabase fetch failed, falling back to tactical demo inventory:', err);
+        console.warn('Supabase fetch failed, falling back to demonstration inventory:', err);
       }
     }
 
-    if (locationId) {
+    if (locationId && locationId !== 'ALL') {
       return this.localInventory.filter(item => item.location_id === locationId);
     }
     return this.localInventory;

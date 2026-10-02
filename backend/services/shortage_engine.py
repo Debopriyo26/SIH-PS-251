@@ -2,7 +2,7 @@
 Predictive Shortage Engine
 Computes multi-dimensional logistics risk:
 Current Inventory + Predicted Consumption + Safety Threshold + Transport Availability + Weather Risk -> Supply Risk
-Explainable AI (XAI): outputs specific root causes for commanding officers.
+Explainable AI (XAI): outputs specific root causes for logistics planners and operators.
 """
 
 from typing import Dict, Any, List

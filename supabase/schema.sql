@@ -1,18 +1,17 @@
 -- ==============================================================================
--- VYOMIX — Predictive Logistics & Forward Supply Chain Intelligence Platform
+-- VYOMIX — Predictive Logistics Intelligence
 -- Database Schema: Supabase PostgreSQL
--- Problem Statement: SIH2625 | Indian Army Predictive Logistics
 -- ==============================================================================
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- 1. LOCATIONS (Synthetic tactical nodes & hubs)
+-- 1. LOCATIONS (Public geographic demonstration zones)
 CREATE TABLE IF NOT EXISTS locations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     code VARCHAR(50) UNIQUE NOT NULL,
     name VARCHAR(255) NOT NULL,
-    type VARCHAR(50) NOT NULL CHECK (type IN ('Supply Hub', 'Distribution Node', 'Forward Node', 'Transit Depot')),
+    type VARCHAR(50) NOT NULL CHECK (type IN ('Logistics Zone', 'Logistics Base', 'Distribution Node', 'Supply Hub', 'Transit Depot')),
     latitude DECIMAL(10, 6) NOT NULL,
     longitude DECIMAL(10, 6) NOT NULL,
     altitude_m INTEGER DEFAULT 1200,
@@ -40,7 +39,7 @@ CREATE TABLE IF NOT EXISTS supplies (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 3. INVENTORY (Real-time stock state per location)
+-- 3. INVENTORY (Stock state per location)
 CREATE TABLE IF NOT EXISTS inventory (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     location_id UUID NOT NULL REFERENCES locations(id) ON DELETE CASCADE,
@@ -59,7 +58,7 @@ CREATE TABLE IF NOT EXISTS inventory (
     UNIQUE(location_id, supply_id)
 );
 
--- 4. CONSUMPTION HISTORY (Historical burn rate records for ML training)
+-- 4. CONSUMPTION HISTORY (Historical burn rate records for ML model training)
 CREATE TABLE IF NOT EXISTS consumption_history (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     location_id UUID NOT NULL REFERENCES locations(id) ON DELETE CASCADE,
@@ -112,7 +111,7 @@ CREATE TABLE IF NOT EXISTS weather_forecasts (
     UNIQUE(location_id, forecast_date, source)
 );
 
--- 7. TRANSPORT ASSETS (Tactical logistical fleet)
+-- 7. TRANSPORT ASSETS (Logistics fleet)
 CREATE TABLE IF NOT EXISTS transport_assets (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     asset_code VARCHAR(50) UNIQUE NOT NULL,
@@ -145,7 +144,7 @@ CREATE TABLE IF NOT EXISTS forecast_results (
     generated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 9. ALERTS (Tactical alerts and recommendations)
+-- 9. ALERTS (Operational alerts and recommendations)
 CREATE TABLE IF NOT EXISTS alerts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     alert_type VARCHAR(50) NOT NULL CHECK (alert_type IN ('PREDICTIVE SHORTAGE', 'WEATHER WARNING', 'INVENTORY ALERT', 'TRANSPORT ALERT', 'SYSTEM ALERT')),
@@ -198,7 +197,7 @@ CREATE INDEX IF NOT EXISTS idx_alerts_status_severity ON alerts(status, severity
 CREATE INDEX IF NOT EXISTS idx_transport_avail ON transport_assets(availability);
 
 -- ==============================================================================
--- ROW LEVEL SECURITY (RLS) POLICIES FOR DEMO / APP
+-- ROW LEVEL SECURITY (RLS) POLICIES
 -- ==============================================================================
 ALTER TABLE locations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE supplies ENABLE ROW LEVEL SECURITY;
@@ -212,27 +211,28 @@ ALTER TABLE alerts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE data_sources ENABLE ROW LEVEL SECURITY;
 ALTER TABLE system_events ENABLE ROW LEVEL SECURITY;
 
--- Allow read access for authenticated and anonymous users in demo mode
+-- Allow read access for authenticated and anonymous demonstration queries
 CREATE POLICY "Public read locations" ON locations FOR SELECT USING (true);
 CREATE POLICY "Public read supplies" ON supplies FOR SELECT USING (true);
 CREATE POLICY "Public read inventory" ON inventory FOR SELECT USING (true);
-CREATE POLICY "Public update inventory" ON inventory FOR UPDATE USING (true);
 CREATE POLICY "Public read consumption" ON consumption_history FOR SELECT USING (true);
 CREATE POLICY "Public read weather_obs" ON weather_observations FOR SELECT USING (true);
 CREATE POLICY "Public read weather_fc" ON weather_forecasts FOR SELECT USING (true);
 CREATE POLICY "Public read transport" ON transport_assets FOR SELECT USING (true);
-CREATE POLICY "Public update transport" ON transport_assets FOR UPDATE USING (true);
 CREATE POLICY "Public read forecast" ON forecast_results FOR SELECT USING (true);
 CREATE POLICY "Public read alerts" ON alerts FOR SELECT USING (true);
-CREATE POLICY "Public update alerts" ON alerts FOR UPDATE USING (true);
-CREATE POLICY "Public insert alerts" ON alerts FOR INSERT WITH CHECK (true);
 CREATE POLICY "Public read data_sources" ON data_sources FOR SELECT USING (true);
 CREATE POLICY "Public read system_events" ON system_events FOR SELECT USING (true);
+
+-- Mutations require authenticated session
+CREATE POLICY "Auth update inventory" ON inventory FOR UPDATE TO authenticated USING (auth.uid() IS NOT NULL);
+CREATE POLICY "Auth update transport" ON transport_assets FOR UPDATE TO authenticated USING (auth.uid() IS NOT NULL);
+CREATE POLICY "Auth update alerts" ON alerts FOR UPDATE TO authenticated USING (auth.uid() IS NOT NULL);
+CREATE POLICY "Auth insert alerts" ON alerts FOR INSERT TO authenticated WITH CHECK (auth.uid() IS NOT NULL);
 
 -- ==============================================================================
 -- REALTIME SUBSCRIPTIONS
 -- ==============================================================================
--- Enable Realtime for dynamic live updates
 ALTER PUBLICATION supabase_realtime ADD TABLE inventory;
 ALTER PUBLICATION supabase_realtime ADD TABLE alerts;
 ALTER PUBLICATION supabase_realtime ADD TABLE transport_assets;

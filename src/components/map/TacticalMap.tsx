@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, Tooltip } from 'react-leaflet';
+import React, { useEffect, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { LocationNode } from '../../types';
 import { StatusBadge } from '../common/StatusBadge';
-import { Shield, CloudRain, Truck, Package, ArrowUpRight, Navigation } from 'lucide-react';
+import { ArrowUpRight, Navigation, Info } from 'lucide-react';
+import { PUBLIC_DATA_DISCLAIMER } from '../../services/demoData';
 
 interface TacticalMapProps {
   locations: LocationNode[];
@@ -13,53 +15,47 @@ interface TacticalMapProps {
   className?: string;
 }
 
-// Custom tactical SVG marker icons
-function createTacticalIcon(status: 'operational' | 'attention' | 'critical', type: string) {
-  let color = '#3FA34D';
-  let pulseClass = '';
+// Invalidate size component to guarantee correct rendering upon tab switch or container resize
+function MapResizer() {
+  const map = useMap();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [map]);
+  return null;
+}
+
+// Create custom high-contrast military-styled map marker icons
+function createStatusIcon(status: 'operational' | 'attention' | 'critical') {
+  let borderColor = '#3FA34D';
+  let fillColor = '#3FA34D';
 
   if (status === 'attention') {
-    color = '#D39B32';
+    borderColor = '#D39B32';
+    fillColor = '#D39B32';
   } else if (status === 'critical') {
-    color = '#C43C3C';
-    pulseClass = 'animate-pulse';
+    borderColor = '#C43C3C';
+    fillColor = '#C43C3C';
   }
 
-  const isHub = type === 'Supply Hub';
-
   const svgHtml = `
-    <div class="relative flex items-center justify-center -translate-x-1/2 -translate-y-1/2 select-none">
-      ${status === 'critical' ? `<div class="absolute w-10 h-10 rounded-full border border-[${color}] animate-ping opacity-60"></div>` : ''}
-      <div class="w-7 h-7 rounded-sm flex items-center justify-center shadow-lg border-2 ${pulseClass}" style="background-color: #101B13; border-color: ${color};">
-        ${isHub ? `
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="12 2 2 7 12 12 22 7 12 2" />
-            <polyline points="2 17 12 22 22 17" />
-            <polyline points="2 12 12 17 22 12" />
-          </svg>
-        ` : `
-          <div class="w-2.5 h-2.5 rounded-xs" style="background-color: ${color};"></div>
-        `}
+    <div style="position: relative; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">
+      <div style="width: 22px; height: 22px; border-radius: 50%; background-color: #101B13; border: 2.5px solid ${borderColor}; box-shadow: 0 2px 6px rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center;">
+        <div style="width: 8px; height: 8px; border-radius: 50%; background-color: ${fillColor};"></div>
       </div>
     </div>
   `;
 
   return L.divIcon({
     html: svgHtml,
-    className: 'custom-tactical-marker',
+    className: 'custom-map-marker',
     iconSize: [28, 28],
     iconAnchor: [14, 14],
+    popupAnchor: [0, -14],
   });
 }
-
-// Realistic synthetic transport routes connecting the nodes
-const ROUTES: { from: string; to: string; status: 'clear' | 'degraded' | 'restricted' }[] = [
-  { from: 'LOC-SH-C', to: 'LOC-SH-N', status: 'clear' },
-  { from: 'LOC-SH-N', to: 'LOC-DN-A', status: 'degraded' },
-  { from: 'LOC-SH-N', to: 'LOC-DN-B', status: 'clear' },
-  { from: 'LOC-DN-A', to: 'LOC-FN-A', status: 'restricted' },
-  { from: 'LOC-DN-B', to: 'LOC-FN-B', status: 'clear' },
-];
 
 export const TacticalMap: React.FC<TacticalMapProps> = ({
   locations,
@@ -68,201 +64,104 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
   onViewDetails,
   className = '',
 }) => {
-  const mapCenter: [number, number] = [33.7, 74.8];
-
-  const getRouteCoordinates = (fromCode: string, toCode: string): [number, number][] => {
-    const loc1 = locations.find(l => l.code === fromCode);
-    const loc2 = locations.find(l => l.code === toCode);
-    if (!loc1 || !loc2) return [];
-    return [
-      [loc1.latitude, loc1.longitude],
-      [loc2.latitude, loc2.longitude]
-    ];
-  };
+  // Center roughly on India's northern/western logistics sector
+  const defaultCenter: [number, number] = [28.5, 73.5];
 
   return (
-    <div className={`relative w-full h-[600px] rounded-sm overflow-hidden border border-[#263F2B] bg-[#07100B] ${className}`}>
-      {/* Map Control HUD Overlay */}
-      <div className="absolute top-3 left-3 z-[1000] bg-[#101B13]/90 backdrop-blur-md border border-[#263F2B] p-2.5 rounded-xs text-xs font-mono">
-        <div className="flex items-center gap-2 text-[#B5A47A] font-semibold mb-1">
-          <Navigation className="w-3.5 h-3.5 text-[#3FA34D]" />
-          <span>TACTICAL CARTOGRAPHY (LEAFLET GIS)</span>
+    <div className={`relative w-full h-full min-h-[420px] rounded-sm overflow-hidden border border-[#263F2B] bg-[#07100B] flex flex-col ${className}`}>
+      {/* Subtle Map Legend Header */}
+      <div className="bg-[#101B13] border-b border-[#263F2B] px-3.5 py-2 flex flex-wrap items-center justify-between text-xs font-mono">
+        <div className="flex items-center gap-2 text-[#E7E9E2] font-semibold">
+          <Navigation className="w-3.5 h-3.5 text-[#B5A47A]" />
+          <span>LOGISTICS MAP — DEMONSTRATION ZONES</span>
         </div>
         <div className="flex items-center gap-3 text-[11px] text-[#8B9B8E]">
-          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-xs bg-[#3FA34D]"></span> OPERATIONAL</span>
-          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-xs bg-[#D39B32]"></span> ATTENTION</span>
-          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-xs bg-[#C43C3C]"></span> CRITICAL</span>
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#3FA34D]" /> Normal</span>
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#D39B32]" /> Attention</span>
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#C43C3C]" /> Critical</span>
         </div>
       </div>
 
-      <MapContainer
-        center={mapCenter}
-        zoom={8}
-        scrollWheelZoom={true}
-        className="w-full h-full"
-      >
-        {/* Dark Tactical CartoDB Tiles */}
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          className="tactical-tiles"
-        />
+      {/* Leaflet Map Canvas */}
+      <div className="relative flex-1 w-full h-full min-h-[380px]">
+        <MapContainer
+          center={defaultCenter}
+          zoom={5}
+          scrollWheelZoom={true}
+          style={{ width: '100%', height: '100%', minHeight: '380px', backgroundColor: '#101B13' }}
+        >
+          <MapResizer />
+          {/* Reliable OpenStreetMap standard tiles */}
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            maxZoom={18}
+          />
 
-        {/* Tactical Routes */}
-        {ROUTES.map((route, idx) => {
-          const coords = getRouteCoordinates(route.from, route.to);
-          if (coords.length < 2) return null;
-
-          let color = '#3FA34D';
-          let dashArray = '4, 4';
-          if (route.status === 'degraded') {
-            color = '#D39B32';
-            dashArray = '6, 6';
-          } else if (route.status === 'restricted') {
-            color = '#C43C3C';
-            dashArray = '8, 4';
-          }
-
-          return (
-            <Polyline
-              key={idx}
-              positions={coords}
-              pathOptions={{
-                color,
-                weight: 2.5,
-                dashArray,
-                opacity: 0.8,
-              }}
-            >
-              <Tooltip sticky className="font-mono text-xs">
-                <span>Route {route.from} ➔ {route.to} [{route.status.toUpperCase()}]</span>
-              </Tooltip>
-            </Polyline>
-          );
-        })}
-
-        {/* Location Markers */}
-        {locations.map((loc) => {
-          const isSelected = selectedLocation?.id === loc.id;
-          return (
+          {locations.map((loc) => (
             <Marker
               key={loc.id}
               position={[loc.latitude, loc.longitude]}
-              icon={createTacticalIcon(loc.status, loc.type)}
+              icon={createStatusIcon(loc.status)}
               eventHandlers={{
                 click: () => onSelectLocation(loc),
               }}
             >
-              <Popup className="tactical-popup">
-                <div className="p-1 min-w-[200px] font-sans">
-                  <div className="flex items-center justify-between border-b border-[#263F2B] pb-1.5 mb-2">
-                    <div>
-                      <div className="font-mono text-[10px] text-[#8B9B8E] tracking-wider uppercase">
-                        {loc.type}
-                      </div>
-                      <div className="font-tactical font-bold text-sm text-[#E7E9E2]">
-                        {loc.name}
-                      </div>
-                    </div>
-                    <StatusBadge status={loc.status} size="sm" />
+              <Popup>
+                <div className="p-1 min-w-[210px] font-sans text-xs">
+                  <div className="flex items-center justify-between border-b border-gray-200 pb-1.5 mb-2">
+                    <span className="font-bold text-gray-900">{loc.name}</span>
+                    <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-gray-100 text-gray-700">
+                      {loc.status}
+                    </span>
                   </div>
 
-                  <div className="space-y-1 font-mono text-xs">
-                    <div className="flex justify-between text-[#8B9B8E]">
-                      <span>Inventory Readiness:</span>
-                      <span className="text-[#E7E9E2] font-semibold">{loc.inventory_readiness_pct}%</span>
+                  <div className="space-y-1 font-mono text-[11px] text-gray-700">
+                    <div className="flex justify-between">
+                      <span>Supply Readiness:</span>
+                      <strong>{loc.inventory_readiness_pct}%</strong>
                     </div>
-                    <div className="flex justify-between text-[#8B9B8E]">
-                      <span>Demand Forecast:</span>
-                      <span className="text-[#fbbf24] font-semibold">+14%</span>
-                    </div>
-                    <div className="flex justify-between text-[#8B9B8E]">
+                    <div className="flex justify-between">
                       <span>Weather Risk:</span>
-                      <span className={loc.weather_risk === 'LOW' ? 'text-[#4ade80]' : loc.weather_risk === 'MODERATE' ? 'text-[#fbbf24]' : 'text-[#f87171]'}>
-                        {loc.weather_risk}
-                      </span>
+                      <strong>{loc.weather_risk}</strong>
                     </div>
-                    <div className="flex justify-between text-[#8B9B8E]">
+                    <div className="flex justify-between">
                       <span>Transport Avail:</span>
-                      <span className="text-[#E7E9E2] font-semibold">{loc.transport_availability_pct}%</span>
+                      <strong>{loc.transport_availability_pct}%</strong>
                     </div>
-                    <div className="flex justify-between text-[#8B9B8E]">
+                    <div className="flex justify-between">
+                      <span>Days of Cover:</span>
+                      <strong>{loc.days_of_cover}d</strong>
+                    </div>
+                    <div className="flex justify-between">
                       <span>Projected Shortage:</span>
-                      <span className={loc.projected_shortage === 'NONE' ? 'text-[#4ade80]' : 'text-[#f87171] font-bold'}>
+                      <strong className={loc.projected_shortage === 'NONE' ? 'text-green-700' : 'text-red-700'}>
                         {loc.projected_shortage}
-                      </span>
+                      </strong>
                     </div>
                   </div>
 
                   {onViewDetails && (
                     <button
                       onClick={() => onViewDetails(loc)}
-                      className="mt-3 w-full py-1.5 px-3 bg-[#263F2B] hover:bg-[#325338] text-[#E7E9E2] border border-[#596B3A] rounded-xs font-tactical text-xs tracking-wider uppercase flex items-center justify-center gap-1.5 transition-colors"
+                      className="mt-3 w-full py-1 px-2 bg-[#263F2B] text-white rounded text-[11px] font-semibold flex items-center justify-center gap-1 hover:bg-[#325338]"
                     >
                       <span>VIEW DETAILS</span>
-                      <ArrowUpRight className="w-3.5 h-3.5 text-[#B5A47A]" />
+                      <ArrowUpRight className="w-3 h-3" />
                     </button>
                   )}
                 </div>
               </Popup>
             </Marker>
-          );
-        })}
-      </MapContainer>
+          ))}
+        </MapContainer>
+      </div>
 
-      {/* Selected Location Tactical Panel overlay (Bottom or Right side) */}
-      {selectedLocation && (
-        <div className="absolute bottom-4 right-4 z-[1000] w-80 bg-[#101B13]/95 backdrop-blur-md border border-[#263F2B] p-4 rounded-xs shadow-2xl tactical-border">
-          <div className="flex items-center justify-between border-b border-[#1A2C1E] pb-2 mb-3">
-            <div>
-              <span className="font-mono text-[10px] text-[#8B9B8E] uppercase tracking-wider">
-                LOCATION NODE
-              </span>
-              <h4 className="font-tactical font-bold text-base text-[#E7E9E2]">
-                {selectedLocation.name}
-              </h4>
-            </div>
-            <StatusBadge status={selectedLocation.status} />
-          </div>
-
-          <div className="space-y-2 text-xs font-mono">
-            <div className="flex justify-between">
-              <span className="text-[#8B9B8E]">Inventory Readiness</span>
-              <span className="text-[#E7E9E2] font-semibold">{selectedLocation.inventory_readiness_pct}%</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[#8B9B8E]">Demand Forecast</span>
-              <span className="text-[#fbbf24] font-semibold">+14%</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[#8B9B8E]">Weather Risk</span>
-              <span className={selectedLocation.weather_risk === 'LOW' ? 'text-[#4ade80]' : 'text-[#f87171] font-semibold'}>
-                {selectedLocation.weather_risk}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[#8B9B8E]">Transport Availability</span>
-              <span className="text-[#E7E9E2] font-semibold">{selectedLocation.transport_availability_pct}%</span>
-            </div>
-            <div className="flex justify-between border-t border-[#1A2C1E] pt-2">
-              <span className="text-[#8B9B8E]">Projected Shortage</span>
-              <span className={selectedLocation.projected_shortage === 'NONE' ? 'text-[#4ade80]' : 'text-[#f87171] font-bold'}>
-                {selectedLocation.projected_shortage}
-              </span>
-            </div>
-          </div>
-
-          {onViewDetails && (
-            <button
-              onClick={() => onViewDetails(selectedLocation)}
-              className="mt-4 w-full py-2 bg-[#263F2B] hover:bg-[#325338] text-[#E7E9E2] border border-[#596B3A] rounded-xs font-tactical text-xs tracking-wider uppercase flex items-center justify-center gap-2 transition-all shadow-md"
-            >
-              <span>VIEW FULL INVENTORY & TELEMETRY</span>
-              <ArrowUpRight className="w-3.5 h-3.5 text-[#B5A47A]" />
-            </button>
-          )}
-        </div>
-      )}
+      {/* Subtle Geographic Disclaimer Footer */}
+      <div className="bg-[#101B13] border-t border-[#263F2B] px-3 py-1.5 flex items-center gap-1.5 text-[10px] font-mono text-[#8B9B8E]">
+        <Info className="w-3 h-3 text-[#B5A47A] shrink-0" />
+        <span className="truncate">{PUBLIC_DATA_DISCLAIMER}</span>
+      </div>
     </div>
   );
 };

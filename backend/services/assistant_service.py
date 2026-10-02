@@ -1,6 +1,6 @@
 """
 AI Logistics Assistant (Backend Service)
-Grounded Question-Answering Engine over current operational state.
+Grounded Question-Answering Engine over current logistics demonstration state.
 """
 
 from typing import Dict, Any, List
@@ -14,61 +14,63 @@ class AssistantService:
 
         if "supplies" in lower and ("risk" in lower or "shortage" in lower):
             content = (
-                "### ⚠️ Tactical Supply Risk Assessment\n\n"
-                "Based on current burn rates and 7-day projected forecasts, **3 supply items** are currently at elevated risk:\n\n"
-                "- **High-Altitude Diesel & POL Fuel** at *Distribution Node Alpha*: Stock is **4,820 L** with **9.4 Days of Cover** remaining. Status: **MODERATE**.\n\n"
-                "- **Tactical Trauma Med Kits** at *Forward Node A*: Stock is **42 Kits** with **3.0 Days of Cover** remaining. Status: **CRITICAL**.\n\n"
-                "- **Purified Bulk Potable Water** at *Forward Node A*: Stock is **1,900 L** with **3.9 Days of Cover** remaining. Status: **CRITICAL**.\n\n"
-                "**Actionable Directive:** Immediate dispatch of bowser TR-001 (POL) and emergency airlift for Medical Trauma Kits at Forward Node A is recommended."
+                "### ⚠️ Supply Risk Assessment\n\n"
+                "Based on current consumption rates and 7-day projected forecasts, supply items at elevated risk include:\n\n"
+                "- **High-Altitude Diesel & POL Fuel** at *Srinagar Logistics Zone*: Stock is **12,400 L** with **7.8 Days of Cover** remaining. Status: **HIGH**.\n\n"
+                "- **Emergency Medical & Trauma Kits** at *Srinagar Logistics Zone*: Stock is **180 Kits** with **5.1 Days of Cover** remaining. Status: **CRITICAL**.\n\n"
+                "- **Purified Bulk Potable Water** at *Kutch Logistics Zone*: Stock is **11,500 L** with **8.2 Days of Cover** remaining. Status: **HIGH**.\n\n"
+                "**Recommended Action:** Dispatch transport carrier TR-001 from Ahmedabad Logistics Base with supplemental supplies."
             )
             sources = ["Inventory Intelligence DB", "Predictive Shortage Engine"]
 
         elif "fuel" in lower or "pol" in lower:
             content = (
                 "### ⛽ Fuel (POL) Demand & Depletion Outlook\n\n"
-                "- **Distribution Node Alpha:** Current Stock is **4,820 L** against a daily consumption of **510 L/day**.\n"
-                "- **7-Day Projected Demand:** **6,240 L** (+22% surge expected due to heater & generator runtimes).\n"
-                "- **Days of Cover:** **9.4 days** (Below standard 14-day operational cushion).\n"
-                "- **Corridor Status:** Sector Pass route is under IMD Orange Rainfall Warning, slowing road transit.\n\n"
-                "**Recommendation:** Authorize top-up convoy TR-001 from Supply Hub North before precipitation intensifies."
+                "- **Srinagar Logistics Zone:** Current Stock is **12,400 L** against a daily consumption of **1,600 L/day**.\n"
+                "- **7-Day Projected Demand:** **11,800 L** (Increased consumption expected due to generator and heating runtimes).\n"
+                "- **Days of Cover:** **7.8 days** (Below recommended 14-day operational buffer).\n"
+                "- **Corridor Status:** Weather advisory in Northern sector slowing transport movement.\n\n"
+                "**Recommendation:** Schedule top-up shipment from Ahmedabad Logistics Base before conditions deteriorate."
             )
-            sources = ["Demand Forecasting Engine (RandomForest)", "IMD Telemetry"]
+            sources = ["Demand Forecasting Engine (ML)", "IMD Weather Telemetry"]
 
         elif "weather" in lower or "imd" in lower or "rain" in lower:
             content = (
-                "### 🛰️ IMD Meteorological Assessment\n\n"
+                "### 🛰️ Meteorological Assessment\n\n"
                 "Data Source: **India Meteorological Department (Mausam API)**\n\n"
-                "High weather risks detected across **2 operational zones**:\n\n"
-                "- **Distribution Node Alpha** [ORANGE Warning]: Temp 8.2°C, Rainfall 18.5mm, Wind 34km/h. Advisory: *'Heavy localized rainfall with mudslide hazard along Sector Pass corridor.'*\n\n"
-                "- **Forward Node A** [RED Warning]: Temp -2.4°C, Rainfall 8.4mm, Wind 48km/h. Advisory: *'Snow blizzard & gale gusts; convoy speed capped at 15 km/h.'*"
+                "Weather conditions across demonstration zones:\n\n"
+                "- **Srinagar Logistics Zone** [ORANGE Advisory]: Temp 8.2°C, Rainfall 18.5mm, Wind 34km/h. Advisory: *'Heavy localized precipitation and reduced visibility.'*\n\n"
+                "- **Kutch Logistics Zone** [YELLOW Advisory]: Temp 29.0°C, Rainfall 3.2mm, Wind 22km/h. Moderate coastal wind.\n\n"
+                "- **Jaisalmer Logistics Zone** [GREEN]: Clear and arid, 34.5°C.\n\n"
+                "- **Ahmedabad Logistics Base** [GREEN]: Clear skies, 31.0°C."
             )
-            sources = ["IMD Official Gateway (Mausam API)", "Sector Weather Telemetry"]
+            sources = ["IMD Official Gateway (Mausam API)", "Weather Telemetry"]
 
         elif "alert" in lower or "critical" in lower:
             content = (
-                "### 🚨 Active Tactical Alerts (Today)\n\n"
-                "Total active tactical alerts: **4**\n\n"
-                "1. **[CRITICAL] Critical Medical Trauma Kit Depletion Imminent** (Forward Node A)\n"
-                "2. **[HIGH] Fuel Demand Exceeds Projected Stock Threshold** (Distribution Node Alpha)\n"
-                "3. **[HIGH] IMD Orange Warning: Heavy Mountain Precipitation** (Sector Pass)\n"
-                "4. **[MEDIUM] Transport Fleet Capacity Reduced by 38%** (TR-002 Workshop Overhaul)"
+                "### 🚨 Active Operational Alerts (Today)\n\n"
+                "Active operational alerts:\n\n"
+                "1. **[CRITICAL] Emergency Medical Kit Depletion Risk** (Srinagar Logistics Zone)\n"
+                "2. **[HIGH] Fuel Demand Exceeds Projected Stock Threshold** (Srinagar Logistics Zone)\n"
+                "3. **[HIGH] Advisory: Mountain Precipitation & Sleet** (Northern Corridor)\n"
+                "4. **[MEDIUM] Transport Fleet Capacity Reduced by 35%** (TR-002 Routine Maintenance)"
             )
-            sources = ["Tactical Alert Center", "Supabase Realtime Stream"]
+            sources = ["Logistics Alert Center", "Supabase Realtime Stream"]
 
         else:
             content = (
-                "### 🛡️ Tactical System Operational Overview\n\n"
-                "- **Supply Readiness:** 87% across all sectors\n"
-                "- **Weather Risk:** 42% (Orange warning active along Eastern Flank)\n"
-                "- **Transport Availability:** 76% (6 active tactical assets tracked)\n"
-                "- **Active Alerts:** 4 operational alerts requiring commanding officer review\n\n"
+                "### 📊 Logistics System Operational Overview\n\n"
+                "- **Supply Readiness:** 86% across all zones\n"
+                "- **Weather Risk:** 38% (Precipitation advisory active in Northern Sector)\n"
+                "- **Transport Availability:** 82% (4 active transport assets tracked)\n"
+                "- **Active Alerts:** 4 operational alerts requiring logistics manager review\n\n"
                 "You can ask specific questions such as:\n"
                 "• *'Which supplies are currently at risk?'*\n"
                 "• *'What is the projected fuel demand?'*\n"
                 "• *'Which locations have elevated weather risk?'*\n"
                 "• *'Show today's critical alerts.'*"
             )
-            sources = ["VYOMIX Tactical Grounding Engine"]
+            sources = ["VYOMIX Logistics Intelligence Engine"]
 
         return {
             "id": f"msg-{int(datetime.now().timestamp())}",

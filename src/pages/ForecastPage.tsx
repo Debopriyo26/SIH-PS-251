@@ -1,19 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { 
   TrendingUp, 
-  Cpu, 
   AlertTriangle, 
-  HelpCircle, 
-  Calendar, 
-  Sliders, 
-  ShieldCheck, 
-  CheckCircle2, 
+  ChevronDown, 
+  ChevronUp, 
   Info,
-  Layers,
-  ArrowRight
+  Calendar,
+  CheckCircle2
 } from 'lucide-react';
 import { TacticalCard } from '../components/common/TacticalCard';
 import { StatusBadge } from '../components/common/StatusBadge';
+import { DataStatus } from '../components/common/DataStatus';
 import { forecastService } from '../services/forecastService';
 import { inventoryService } from '../services/inventoryService';
 import { ForecastSummary, LocationNode, SupplyCategory, RiskLevel } from '../types';
@@ -32,11 +29,12 @@ import {
 
 export const ForecastPage: React.FC = () => {
   const [locations, setLocations] = useState<LocationNode[]>([]);
-  const [selectedLocationId, setSelectedLocationId] = useState<string>('loc-dn-a');
+  const [selectedLocationId, setSelectedLocationId] = useState<string>('loc-srinagar');
   const [selectedCategory, setSelectedCategory] = useState<SupplyCategory>('Fuel');
   const [horizonDays, setHorizonDays] = useState<number>(7);
   const [forecast, setForecast] = useState<ForecastSummary | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [showModelDetails, setShowModelDetails] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     async function init() {
@@ -48,43 +46,43 @@ export const ForecastPage: React.FC = () => {
   }, [selectedLocationId, selectedCategory, horizonDays]);
 
   const loadForecastData = async (locId: string, cat: SupplyCategory, days: number) => {
-    setLoading(true);
+    setIsLoading(true);
     const result = await forecastService.getForecast(locId, cat, days);
     setForecast(result);
-    setLoading(false);
+    setIsLoading(false);
   };
 
-  const activeLoc = locations.find(l => l.id === selectedLocationId) || locations[2];
+  const activeLoc = locations.find(l => l.id === selectedLocationId) || locations[0];
 
   return (
     <div className="space-y-6">
-      {/* Header and Selectors */}
+      {/* Header & Controls */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#1A2C1E] pb-4">
         <div>
           <h1 className="font-tactical text-2xl font-bold tracking-wider text-[#E7E9E2] uppercase flex items-center gap-2.5">
             <span className="w-2.5 h-6 bg-[#B5A47A] inline-block"></span>
-            Predictive Demand & Shortage Engine
+            Demand Forecast
           </h1>
           <p className="font-mono text-xs text-[#8B9B8E] mt-0.5">
-            Machine Learning Forecasting • Multi-Factor Non-Black-Box Supply Risk Scoring
+            Projected supply consumption horizons and explainable shortage risk assessment
           </p>
         </div>
 
-        {/* Controls Bar */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 bg-[#101B13] p-1 border border-[#263F2B] rounded-xs font-mono text-xs">
+        {/* Controls: Location, Supply, and Horizon Selector */}
+        <div className="flex flex-wrap items-center gap-3 font-mono text-xs">
+          <div className="flex items-center gap-1 bg-[#101B13] p-1 border border-[#263F2B] rounded-xs">
             <span className="text-[#8B9B8E] px-2">HORIZON:</span>
             {[7, 14, 30].map((d) => (
               <button
                 key={d}
                 onClick={() => setHorizonDays(d)}
-                className={`px-3 py-1 rounded-xs transition-colors ${
+                className={`px-3 py-1 rounded-xs transition-colors cursor-pointer ${
                   horizonDays === d
                     ? 'bg-[#263F2B] text-[#E7E9E2] font-semibold border border-[#596B3A]'
                     : 'text-[#8B9B8E] hover:text-[#E7E9E2]'
                 }`}
               >
-                {d} Days
+                {d}d
               </button>
             ))}
           </div>
@@ -92,7 +90,7 @@ export const ForecastPage: React.FC = () => {
           <select
             value={selectedLocationId}
             onChange={(e) => setSelectedLocationId(e.target.value)}
-            className="bg-[#101B13] border border-[#263F2B] text-xs font-mono text-[#E7E9E2] px-3.5 py-2 rounded-xs focus:outline-hidden"
+            className="bg-[#101B13] border border-[#263F2B] text-[#E7E9E2] px-3.5 py-2 rounded-xs focus:outline-hidden cursor-pointer"
           >
             {locations.map((loc) => (
               <option key={loc.id} value={loc.id}>
@@ -104,7 +102,7 @@ export const ForecastPage: React.FC = () => {
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value as SupplyCategory)}
-            className="bg-[#101B13] border border-[#263F2B] text-xs font-mono text-[#E7E9E2] px-3.5 py-2 rounded-xs focus:outline-hidden"
+            className="bg-[#101B13] border border-[#263F2B] text-[#E7E9E2] px-3.5 py-2 rounded-xs focus:outline-hidden cursor-pointer"
           >
             {['Fuel', 'Food', 'Medical', 'Water', 'General Supplies'].map((cat) => (
               <option key={cat} value={cat}>
@@ -115,109 +113,103 @@ export const ForecastPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Model Performance & Telemetry Strip */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-[#101B13] border border-[#263F2B] p-4 rounded-xs font-mono text-xs">
-        <div>
-          <span className="text-[#8B9B8E] block text-[10px] uppercase">Active ML Model</span>
-          <span className="text-[#E7E9E2] font-bold text-sm">VYOMIX-RF Ensemble v1.4</span>
-          <span className="text-[#3FA34D] block text-[11px]">Feature Weights: Burn Lag + Weather + Fleet</span>
+      {/* Summary KPI Strip matching requirement 19 */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono text-xs">
+        <div className="p-4 bg-[#101B13] border border-[#263F2B] rounded-xs space-y-1">
+          <span className="text-[10px] text-[#8B9B8E] uppercase block">Selected Zone</span>
+          <div className="font-bold text-[#E7E9E2] text-sm truncate">{activeLoc?.name}</div>
+          <span className="text-[11px] text-[#B5A47A]">{selectedCategory}</span>
         </div>
-        <div>
-          <span className="text-[#8B9B8E] block text-[10px] uppercase">Model Confidence Score</span>
-          <span className="text-[#4ade80] font-bold text-lg">{forecast?.confidenceScore || 89.2}%</span>
-          <span className="text-[#8B9B8E] block text-[11px]">Validated on 180-day backtest</span>
+
+        <div className="p-4 bg-[#101B13] border border-[#263F2B] rounded-xs space-y-1">
+          <span className="text-[10px] text-[#8B9B8E] uppercase block">Current Stock</span>
+          <div className="font-bold text-[#E7E9E2] text-lg">
+            {forecast?.currentStock.toLocaleString()}
+          </div>
+          <span className="text-[11px] text-[#8B9B8E]">Safety Floor: {forecast?.safetyThreshold.toLocaleString()}</span>
         </div>
-        <div>
-          <span className="text-[#8B9B8E] block text-[10px] uppercase">Projected {horizonDays}-Day Consumption</span>
-          <span className="text-[#fbbf24] font-bold text-lg">
-            {forecast?.projectedDemand.toLocaleString()} Units
-          </span>
-          <span className="text-[#8B9B8E] block text-[11px]">Baseline: 510/day + surge factor</span>
+
+        <div className="p-4 bg-[#101B13] border border-[#263F2B] rounded-xs space-y-1">
+          <span className="text-[10px] text-[#8B9B8E] uppercase block">Projected {horizonDays}-Day Demand</span>
+          <div className="font-bold text-[#fbbf24] text-lg">
+            {forecast?.projectedDemand.toLocaleString()}
+          </div>
+          <span className="text-[11px] text-[#8B9B8E]">Estimated total burn</span>
         </div>
-        <div>
-          <span className="text-[#8B9B8E] block text-[10px] uppercase">Calculated Supply Risk</span>
+
+        <div className="p-4 bg-[#101B13] border border-[#263F2B] rounded-xs space-y-1">
+          <span className="text-[10px] text-[#8B9B8E] uppercase block">Calculated Risk Level</span>
           <div className="mt-1">
             <StatusBadge status={forecast?.riskLevel || 'MODERATE'} size="md" pulse={forecast?.riskLevel === 'CRITICAL'} />
           </div>
+          <span className="text-[10px] text-[#8B9B8E] block pt-1">
+            {forecast?.isModelCalculated ? 'Python ML Regressor' : 'Baseline Forecast'}
+          </span>
         </div>
       </div>
 
-      {/* Main ML Forecast Visualization Chart */}
+      {/* Main Forecast Chart */}
       <TacticalCard
-        title={`Historical vs Projected Demand Horizon (${selectedCategory} at ${activeLoc?.name})`}
-        subtitle="Confidence envelope (80%-120%) calculated with IMD weather precipitation cross-correlation"
+        title={`Consumption Horizon: ${selectedCategory} at ${activeLoc?.name}`}
+        subtitle={`Historical burn vs ${horizonDays}-day projected requirements`}
+        headerAction={
+          <DataStatus
+            mode={forecast?.isModelCalculated ? 'LIVE' : 'DEMO'}
+            source={forecast?.modelLabel || 'Forecasting Engine'}
+            size="sm"
+          />
+        }
       >
-        <div className="h-80 w-full pt-4">
+        <div className="h-72 w-full pt-4 font-mono">
           {forecast && (
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={forecast.points} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
+              <ComposedChart data={forecast.points} margin={{ top: 10, right: 20, left: 10, bottom: 20 }}>
                 <CartesianGrid stroke="#1A2C1E" strokeDasharray="3 3" />
-                <XAxis dataKey="date" stroke="#8B9B8E" fontSize={11} tickLine={false} />
-                <YAxis yAxisId="demand" stroke="#8B9B8E" fontSize={11} />
-                <YAxis yAxisId="rain" orientation="right" stroke="#3E92CC" fontSize={11} unit="mm" />
+                <XAxis dataKey="date" stroke="#8B9B8E" fontSize={11} />
+                <YAxis stroke="#8B9B8E" fontSize={11} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#101B13',
                     borderColor: '#263F2B',
                     borderRadius: '2px',
                     color: '#E7E9E2',
-                    fontFamily: 'monospace',
-                    fontSize: '12px'
+                    fontSize: '11px',
+                    fontFamily: 'monospace'
                   }}
                 />
                 <Legend
                   wrapperStyle={{
                     fontFamily: 'monospace',
                     fontSize: '11px',
-                    paddingTop: '10px'
+                    paddingTop: '8px'
                   }}
                 />
-                {/* Confidence Interval Envelope */}
+                {/* Confidence Area */}
                 <Area
-                  yAxisId="demand"
                   type="monotone"
                   dataKey="upperConfidence"
                   stroke="none"
                   fill="rgba(89, 107, 58, 0.15)"
-                  name="Upper Confidence (90th percentile)"
+                  name="Upper Estimate"
                 />
-                <Area
-                  yAxisId="demand"
-                  type="monotone"
-                  dataKey="lowerConfidence"
-                  stroke="none"
-                  fill="rgba(7, 16, 11, 0.9)"
-                  name="Lower Confidence (10th percentile)"
-                />
-                {/* Rainfall Bars from IMD */}
-                <Bar
-                  yAxisId="rain"
-                  dataKey="rainfallMm"
-                  fill="#3E92CC"
-                  opacity={0.35}
-                  name="IMD Rainfall (mm)"
-                  barSize={12}
-                />
-                {/* Historical Demand Line */}
+                {/* Historical Line */}
                 <Line
-                  yAxisId="demand"
                   type="monotone"
                   dataKey="historicalDemand"
                   stroke="#8B9B8E"
-                  strokeWidth={2.5}
-                  dot={{ r: 4, fill: '#8B9B8E' }}
-                  name="Historical Actual Consumption"
+                  strokeWidth={2}
+                  dot={{ r: 3, fill: '#8B9B8E' }}
+                  name="Historical Actual"
                 />
-                {/* ML Forecast Line */}
+                {/* Forecast Line */}
                 <Line
-                  yAxisId="demand"
                   type="monotone"
                   dataKey="forecastDemand"
                   stroke="#fbbf24"
                   strokeWidth={2.5}
                   strokeDasharray="4 2"
-                  dot={{ r: 4, fill: '#fbbf24' }}
-                  name="ML Predicted Demand"
+                  dot={{ r: 3, fill: '#fbbf24' }}
+                  name="Projected Forecast"
                 />
               </ComposedChart>
             </ResponsiveContainer>
@@ -225,78 +217,58 @@ export const ForecastPage: React.FC = () => {
         </div>
       </TacticalCard>
 
-      {/* Explainable AI & Shortage Risk Attribution Panel */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <TacticalCard
-          title="Predictive Shortage Engine — Explainable Factors"
-          subtitle="Mathematical risk decomposition: Inventory + Demand + Safety Floor + Weather + Transport"
+      {/* Explainable AI: Why the risk exists */}
+      <TacticalCard
+        title="Why the Risk Exists (Explainable Factors)"
+        subtitle="Decomposition of supply shortfall drivers"
+      >
+        <div className="space-y-3 font-mono text-xs">
+          {forecast?.riskReasons.map((reason, i) => (
+            <div
+              key={i}
+              className="p-3 bg-[#07100B] border border-[#1A2C1E] rounded-xs flex items-start gap-2.5 text-[#E7E9E2]"
+            >
+              <AlertTriangle className="w-4 h-4 text-[#D39B32] shrink-0 mt-0.5" />
+              <span>{reason}</span>
+            </div>
+          ))}
+        </div>
+      </TacticalCard>
+
+      {/* Model Details Collapsible matching requirement 19 */}
+      <div className="border border-[#263F2B] bg-[#101B13] rounded-xs font-mono text-xs">
+        <button
+          onClick={() => setShowModelDetails(!showModelDetails)}
+          className="w-full p-3.5 flex items-center justify-between text-left text-[#B5A47A] hover:text-white transition-colors cursor-pointer"
         >
-          <div className="space-y-4 font-mono text-xs">
-            <div className="p-3 bg-[#07100B] border border-[#1A2C1E] rounded-xs flex items-center justify-between">
-              <span className="text-[#8B9B8E]">Calculated Risk Status:</span>
-              <StatusBadge status={forecast?.riskLevel || 'MODERATE'} size="md" pulse={forecast?.riskLevel === 'CRITICAL'} />
-            </div>
+          <div className="flex items-center gap-2">
+            <Info className="w-4 h-4 text-[#596B3A]" />
+            <span className="font-semibold uppercase tracking-wider text-xs">Model Technical Details</span>
+          </div>
+          {showModelDetails ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </button>
 
-            <div className="space-y-2">
-              <span className="text-[11px] font-tactical uppercase tracking-wider text-[#B5A47A] block">
-                Primary Attribution Drivers (Why this risk exists):
-              </span>
-              {forecast?.riskReasons.map((reason, i) => (
-                <div
-                  key={i}
-                  className="p-3 bg-[#07100B] border border-[#1A2C1E] rounded-xs flex items-start gap-2.5 text-[#E7E9E2]"
-                >
-                  <AlertTriangle className="w-4 h-4 text-[#D39B32] shrink-0 mt-0.5" />
-                  <span>{reason}</span>
-                </div>
-              ))}
+        {showModelDetails && (
+          <div className="p-4 border-t border-[#1A2C1E] space-y-3 bg-[#07100B] text-[#8B9B8E] text-[11px] leading-relaxed">
+            <div>
+              <strong className="text-[#E7E9E2]">Model Architecture: </strong>
+              <span>{forecast?.modelLabel}</span>
             </div>
-
-            <div className="p-3 bg-[#07100B] border border-[#1A2C1E] rounded-xs space-y-2 text-[11px]">
-              <span className="text-[#B5A47A] uppercase font-semibold block">Risk Equation:</span>
-              <div className="text-[#8B9B8E] bg-[#101B13] p-2 rounded-xs border border-[#263F2B]">
-                Risk = (Projected Consumption × Weather Surge Factor) - Current Inventory + (Safety Floor ÷ Transport Availability)
+            <div>
+              <strong className="text-[#E7E9E2]">Engineered Features: </strong>
+              <span>1-day & 7-day autoregressive consumption lags, troop strength, IMD precipitation rate, temperature, transport corridor delay penalty.</span>
+            </div>
+            {forecast?.confidenceScore && (
+              <div>
+                <strong className="text-[#E7E9E2]">Model Evaluation Score: </strong>
+                <span className="text-[#4ade80]">{forecast.confidenceScore}% (Backtested cross-validation)</span>
               </div>
+            )}
+            <div className="text-[10px] text-[#8B9B8E] pt-1">
+              Confidence intervals represent empirical residual error bounds.
             </div>
           </div>
-        </TacticalCard>
-
-        <TacticalCard
-          title="Tactical AI Mitigation Directives"
-          subtitle="Actionable steps generated from inventory thresholds and weather outlook"
-        >
-          <div className="space-y-3 font-mono text-xs">
-            <div className="p-3.5 bg-[#07100B] border border-[#1A2C1E] rounded-xs space-y-2">
-              <div className="flex items-center gap-2 text-[#4ade80] font-semibold text-xs">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>DIRECTIVE 1: STAGE FORWARD CONVOY TR-001</span>
-              </div>
-              <p className="text-[#8B9B8E] text-[11px] leading-relaxed">
-                Dispatch 8-tonne heavy transport carrier from Supply Hub North before IMD Orange rain warning reaches peak intensity at 14:00 IST.
-              </p>
-            </div>
-
-            <div className="p-3.5 bg-[#07100B] border border-[#1A2C1E] rounded-xs space-y-2">
-              <div className="flex items-center gap-2 text-[#fbbf24] font-semibold text-xs">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>DIRECTIVE 2: DYNAMIC CONSERVATION MEASURES</span>
-              </div>
-              <p className="text-[#8B9B8E] text-[11px] leading-relaxed">
-                Implement temporary non-critical generator cycling at Distribution Node Alpha to reduce daily POL burn from 510 L/day to 420 L/day (+2.1 days buffer).
-              </p>
-            </div>
-
-            <div className="p-3.5 bg-[#07100B] border border-[#1A2C1E] rounded-xs space-y-2">
-              <div className="flex items-center gap-2 text-[#B5A47A] font-semibold text-xs">
-                <Info className="w-4 h-4" />
-                <span>DIRECTIVE 3: REDUNDANT ROUTE CLEARANCE</span>
-              </div>
-              <p className="text-[#8B9B8E] text-[11px] leading-relaxed">
-                Notify Northern Sector Road Maintenance Command to pre-position bulldozers along Sector Pass corridor to mitigate mudslide delays.
-              </p>
-            </div>
-          </div>
-        </TacticalCard>
+        )}
       </div>
     </div>
   );

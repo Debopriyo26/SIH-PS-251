@@ -23,13 +23,13 @@ class IMDService:
             
             # Map warning severity
             warning_level = "GREEN"
-            warning_text = "Normal operational weather; routes open"
+            warning_text = "Normal weather conditions; clear visibility"
             if loc.get("weather_risk") == "HIGH":
                 warning_level = "ORANGE"
-                warning_text = "IMD Nowcast: Heavy localized rainfall with mudslide hazard along Sector Pass corridor"
+                warning_text = "IMD Advisory: Heavy localized precipitation and reduced visibility"
             elif loc.get("weather_risk") == "CRITICAL":
                 warning_level = "RED"
-                warning_text = "IMD Warning: High altitude blizzard & gale gusts; convoy speed capped at 15 km/h"
+                warning_text = "IMD Weather Alert: Freezing conditions and high wind gusts"
 
             observations.append({
                 "id": f"obs-{loc.get('id')}",

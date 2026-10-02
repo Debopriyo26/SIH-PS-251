@@ -151,7 +151,7 @@ class DemandForecaster:
             risk_reasons.append("Inventory approaching reorder threshold; safety cushion narrowing")
             risk_reasons.append("Upcoming seasonal weather pattern may reduce supply window")
         else:
-            risk_reasons.append("Adequate inventory cushion exceeds mission requirement")
+            risk_reasons.append("Adequate inventory cushion exceeds operational requirement")
             risk_reasons.append("Operational transport routes and green weather conditions verified")
 
         return {

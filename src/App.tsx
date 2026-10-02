@@ -1,67 +1,102 @@
 import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './lib/authContext';
 import { Header, NavTab } from './components/layout/Header';
-import { DemoBanner } from './components/common/DemoBanner';
 import { VyomixAssistModal } from './components/assistant/VyomixAssistModal';
 
 // Pages
 import { LandingPage } from './pages/LandingPage';
+import { LoginPage } from './pages/LoginPage';
+import { SignupPage } from './pages/SignupPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { DashboardPage } from './pages/DashboardPage';
-import { LogisticsMapPage } from './pages/LogisticsMapPage';
-import { InventoryPage } from './pages/InventoryPage';
+import { LocationsPage } from './pages/LocationsPage';
+import { SuppliesPage } from './pages/SuppliesPage';
 import { ForecastPage } from './pages/ForecastPage';
-import { WeatherPage } from './pages/WeatherPage';
-import { TransportPage } from './pages/TransportPage';
 import { SimulatorPage } from './pages/SimulatorPage';
 import { AlertsPage } from './pages/AlertsPage';
-import { DataSourcesPage } from './pages/DataSourcesPage';
+import { HelpPage } from './pages/HelpPage';
 import { LocationNode } from './types';
 
-export function App() {
+function MainAppContent() {
+  const { isAuthenticated, isLoading } = useAuth();
   const [currentTab, setCurrentTab] = useState<NavTab>('landing');
-  const [isAssistOpen, setIsAssistOpen] = useState(false);
+  const [selectedLocationId, setSelectedLocationId] = useState<string>('ALL');
   const [selectedLocationForDetail, setSelectedLocationForDetail] = useState<LocationNode | null>(null);
+  const [isAssistOpen, setIsAssistOpen] = useState(false);
 
-  const renderContent = () => {
+  // If loading session, show subtle loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#07100B] text-[#E7E9E2] flex items-center justify-center font-mono text-xs">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#B5A47A] animate-ping" />
+          <span>INITIALIZING VYOMIX PLATFORM...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Routing and protected access control
+  const renderPage = () => {
+    // Public routes
+    if (!isAuthenticated) {
+      if (currentTab === 'login') return <LoginPage onNavigate={setCurrentTab} />;
+      if (currentTab === 'signup') return <SignupPage onNavigate={setCurrentTab} />;
+      if (currentTab === 'forgot-password') return <ForgotPasswordPage onNavigate={setCurrentTab} />;
+      return <LandingPage onNavigate={setCurrentTab} />;
+    }
+
+    // Authenticated operational routes
     switch (currentTab) {
-      case 'landing':
-        return (
-          <LandingPage
-            onEnter={() => setCurrentTab('dashboard')}
-            onViewArchitecture={() => setCurrentTab('sources')}
-          />
-        );
       case 'dashboard':
         return (
           <DashboardPage
-            onNavigate={(tab) => setCurrentTab(tab)}
-            onSelectLocationForDetail={(loc) => setSelectedLocationForDetail(loc)}
+            onNavigate={setCurrentTab}
+            selectedLocationId={selectedLocationId}
+            onLocationChange={setSelectedLocationId}
+            onSelectLocationForDetail={(loc) => {
+              setSelectedLocationForDetail(loc);
+              setSelectedLocationId(loc.id);
+            }}
           />
         );
-      case 'map':
+      case 'locations':
         return (
-          <LogisticsMapPage
-            onNavigate={(tab) => setCurrentTab(tab)}
-            onSelectLocationForDetail={(loc) => setSelectedLocationForDetail(loc)}
+          <LocationsPage
+            onNavigate={setCurrentTab}
+            selectedLocationId={selectedLocationId}
+            onLocationChange={setSelectedLocationId}
+            onSelectLocationForDetail={(loc) => {
+              setSelectedLocationForDetail(loc);
+              setSelectedLocationId(loc.id);
+            }}
           />
         );
-      case 'inventory':
-        return <InventoryPage initialLocationId={selectedLocationForDetail?.id} />;
+      case 'supplies':
+        return (
+          <SuppliesPage
+            selectedLocationId={selectedLocationId}
+            onLocationChange={setSelectedLocationId}
+          />
+        );
       case 'forecast':
         return <ForecastPage />;
-      case 'weather':
-        return <WeatherPage />;
-      case 'transport':
-        return <TransportPage />;
       case 'simulator':
         return <SimulatorPage />;
       case 'alerts':
-        return <AlertsPage />;
-      case 'sources':
-        return <DataSourcesPage />;
+        return <AlertsPage selectedLocationId={selectedLocationId} />;
+      case 'help':
+        return <HelpPage />;
       default:
         return (
           <DashboardPage
-            onNavigate={(tab) => setCurrentTab(tab)}
+            onNavigate={setCurrentTab}
+            selectedLocationId={selectedLocationId}
+            onLocationChange={setSelectedLocationId}
+            onSelectLocationForDetail={(loc) => {
+              setSelectedLocationForDetail(loc);
+              setSelectedLocationId(loc.id);
+            }}
           />
         );
     }
@@ -69,27 +104,34 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-[#07100B] text-[#E7E9E2] flex flex-col font-sans">
-      {/* Top Demonstration Mode Notice */}
-      <DemoBanner />
-
-      {/* Main Tactical Header */}
+      {/* Tactical Header with Simplified 6-item Nav, Profile Dropdown, and Help */}
       <Header
         currentTab={currentTab}
         onSelectTab={(tab) => setCurrentTab(tab)}
         onOpenAssist={() => setIsAssistOpen(true)}
       />
 
-      {/* Main Page Area */}
-      <main className={`flex-1 ${currentTab === 'landing' ? '' : 'p-4 md:p-6 max-w-7xl mx-auto w-full'}`}>
-        {renderContent()}
+      {/* Main Page Canvas */}
+      <main className={`flex-1 ${currentTab === 'landing' || currentTab === 'login' || currentTab === 'signup' || currentTab === 'forgot-password' ? '' : 'p-4 md:p-6 max-w-7xl mx-auto w-full'}`}>
+        {renderPage()}
       </main>
 
-      {/* Grounded AI Assistant Drawer */}
-      <VyomixAssistModal
-        isOpen={isAssistOpen}
-        onClose={() => setIsAssistOpen(false)}
-      />
+      {/* AI Assistant Modal */}
+      {isAuthenticated && (
+        <VyomixAssistModal
+          isOpen={isAssistOpen}
+          onClose={() => setIsAssistOpen(false)}
+        />
+      )}
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <AuthProvider>
+      <MainAppContent />
+    </AuthProvider>
   );
 }
 
