@@ -139,35 +139,23 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
             </div>
           </div>
 
-          {/* ZONE SELECTOR: Shown ONLY when ZONAL_HEAD is selected (Requirement 3) */}
+          {/* ZONE SELECTOR: Shown ONLY when ZONAL_HEAD is selected (Phase 1) */}
           {role === 'ZONAL_HEAD' && (
             <div className="p-3.5 bg-[#F0F4EE] border border-[#CAD3C8] rounded-xs space-y-2">
               <label className="text-[#1F2933] block uppercase font-bold text-[11px] tracking-wider flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-[#355E3B]" />
-                <span>ZONE</span>
+                <span>SELECT OPERATIONAL ZONE</span>
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {(['Srinagar', 'Jaisalmer', 'Ahmedabad', 'Kutch'] as LogisticsZone[]).map((z) => (
-                  <label
-                    key={z}
-                    onClick={() => setZone(z)}
-                    className={`p-2 rounded-xs border text-xs font-mono font-bold flex items-center gap-2 cursor-pointer transition-colors ${
-                      zone === z
-                        ? 'bg-[#355E3B] text-white border-[#1F3D27] shadow-xs'
-                        : 'bg-white text-[#52606D] hover:text-[#1F2933] border-[#D8DFD5]'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="zone_selection"
-                      checked={zone === z}
-                      onChange={() => setZone(z)}
-                      className={`accent-[#355E3B] cursor-pointer ${zone === z ? 'accent-white' : ''}`}
-                    />
-                    <span>{z}</span>
-                  </label>
-                ))}
-              </div>
+              <select
+                value={zone}
+                onChange={(e) => setZone(e.target.value as LogisticsZone)}
+                className="w-full px-3.5 py-2.5 bg-white border border-[#D8DFD5] focus:border-[#355E3B] text-[#1F2933] font-bold text-xs rounded-xs focus:outline-hidden cursor-pointer shadow-xs"
+              >
+                <option value="Srinagar">Srinagar (Mountain/Cold Sector)</option>
+                <option value="Jaisalmer">Jaisalmer (Desert/Arid Sector)</option>
+                <option value="Ahmedabad">Ahmedabad (Central Railhead Hub)</option>
+                <option value="Kutch">Kutch (Coastal Marsh Sector)</option>
+              </select>
             </div>
           )}
 

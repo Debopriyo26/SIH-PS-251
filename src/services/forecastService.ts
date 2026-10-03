@@ -358,7 +358,7 @@ class ForecastService {
         reasons.push(`Comfortable inventory buffer exceeding 14-day mission requirement.`);
       }
 
-      requirements.push({
+      const reqItem: AIRequirementItem = {
         id: `ai-req-${item.id}`,
         supply_name: item.supply?.name || 'Supply Item',
         supply_category: category,
@@ -377,7 +377,19 @@ class ForecastService {
         terrain_impact_factor: terrain.factor,
         transport_constraint_note: `${terrain.description} (Lead Time: ${leadTime}d)`,
         suggested_order_qty: projectedShortfall > 0 ? projectedShortfall : (decision === 'REPLENISH' ? Math.round(dailyConsumption * 7) : 0)
-      });
+      };
+
+      requirements.push(reqItem);
+
+      // Mandatory Phase 5: Automatic Critical Escalation to Main Head with deduplication
+      if (decision === 'CRITICAL SHORTAGE') {
+        requestService.autoEscalateCriticalRequirement(
+          reqItem,
+          zoneName as LogisticsZone,
+          weatherMultiplier > 1.1 ? 'HIGH' : 'MODERATE',
+          80
+        ).catch((err) => console.warn('Automatic critical escalation err:', err));
+      }
     }
 
     // Sort by priority weight (Critical first)

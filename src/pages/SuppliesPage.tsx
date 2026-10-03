@@ -133,7 +133,7 @@ export const SuppliesPage: React.FC<SuppliesPageProps> = ({
         <div className="flex items-center gap-3">
           <DataStatus
             mode="LIVE"
-            source="Supabase Cloud Ledger"
+            source="DATABASE"
             size="sm"
           />
 

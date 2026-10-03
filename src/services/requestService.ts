@@ -7,7 +7,8 @@ import {
   RequestType, 
   RequestPriority, 
   RequestStatus, 
-  AlertItem 
+  AlertItem,
+  AIRequirementItem
 } from '../types';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { alertSoundService } from '../lib/sound';
@@ -608,6 +609,165 @@ class RequestService {
       created_by_name: officerName || `${zone} Zonal Officer`,
       created_by_role: 'ZONAL_HEAD'
     });
+  }
+
+  /**
+   * Automatic Critical Escalation (Phase 5 - Mandatory)
+   * Whenever AI detects a genuinely CRITICAL condition, automatically escalates to Main Head.
+   * Deduplication: If an existing active escalation exists for this zone + supply item,
+   * updates the numbers without creating duplicate requests or repeated buzzing.
+   */
+  public async autoEscalateCriticalRequirement(
+    reqItem: AIRequirementItem,
+    zone: LogisticsZone,
+    weatherRisk: string = 'HIGH',
+    transportAvailPct: number = 75
+  ): Promise<LogisticsRequest | null> {
+    // 1. Check for existing active escalation for this zone and supply item
+    const existingIndex = this.localRequests.findIndex(r => 
+      r.zone === zone &&
+      r.requested_supply === reqItem.supply_name &&
+      r.status !== 'RESOLVED'
+    );
+
+    const nowIso = new Date().toISOString();
+    const explanation = 
+      `Critical shortage detected in ${zone}.\n\n` +
+      `Current stock: ${reqItem.current_stock.toLocaleString()} ${reqItem.unit}\n` +
+      `Forecast demand: ${reqItem.projected_demand.toLocaleString()} ${reqItem.unit}\n` +
+      `Projected shortage: ${reqItem.projected_shortfall.toLocaleString()} ${reqItem.unit}\n` +
+      `Estimated replenishment lead time: ${reqItem.lead_time_days} days\n` +
+      `Transport capacity: ${transportAvailPct}%\n` +
+      `Weather/access risk: ${weatherRisk}\n\n` +
+      `AI Recommendation:\nImmediate replenishment required.`;
+
+    if (existingIndex !== -1) {
+      // Deduplication: Update existing active escalation with latest model figures, do NOT buzz again
+      const existing = this.localRequests[existingIndex];
+      existing.current_inventory = reqItem.current_stock;
+      existing.forecast_demand = reqItem.projected_demand;
+      existing.projected_shortage = reqItem.projected_shortfall;
+      existing.requested_quantity = reqItem.suggested_order_qty || reqItem.projected_shortfall;
+      existing.lead_time_days = reqItem.lead_time_days;
+      existing.transport_capacity_pct = transportAvailPct;
+      existing.weather_risk_level = weatherRisk;
+      existing.terrain_risk_note = reqItem.transport_constraint_note;
+      existing.ai_explanation = explanation;
+      existing.updated_at = nowIso;
+
+      this.persistState();
+      return existing;
+    }
+
+    // 2. Genuinely new critical escalation: Create persistent request
+    const count = this.localRequests.length + 1045;
+    const reqNum = `REQ-AI-${count}`;
+    const newId = `req-ai-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+
+    const newEscalation: LogisticsRequest = {
+      id: newId,
+      request_number: reqNum,
+      source: 'AI DETECTED',
+      created_by_name: 'AI Predictive Engine',
+      created_by_role: 'SYSTEM',
+      zone,
+      request_type: 'Emergency Requirement',
+      priority: 'CRITICAL',
+      title: `[AI DETECTED] Critical Shortage: ${reqItem.supply_name}`,
+      description: explanation,
+      requested_supply: reqItem.supply_name,
+      requested_quantity: reqItem.suggested_order_qty || reqItem.projected_shortfall,
+      unit: reqItem.unit,
+      status: 'PENDING',
+      current_inventory: reqItem.current_stock,
+      forecast_demand: reqItem.projected_demand,
+      projected_shortage: reqItem.projected_shortfall,
+      lead_time_days: reqItem.lead_time_days,
+      transport_capacity_pct: transportAvailPct,
+      weather_risk_level: weatherRisk,
+      terrain_risk_note: reqItem.transport_constraint_note,
+      ai_explanation: explanation,
+      created_at: nowIso,
+      updated_at: nowIso
+    };
+
+    this.localRequests.unshift(newEscalation);
+
+    // Timeline history
+    this.localHistory.push({
+      id: `hist-ai-${Date.now()}`,
+      request_id: newId,
+      action: 'AI_CRITICAL_ESCALATION',
+      performed_by: 'AI Predictive Engine',
+      performed_by_role: 'SYSTEM',
+      message: `AI automatically escalated critical requirement for ${reqItem.supply_name} (${reqItem.projected_shortfall.toLocaleString()} ${reqItem.unit} shortfall) to Main Head.`,
+      created_at: nowIso
+    });
+
+    // Notification for Main Head
+    this.localNotifications.unshift({
+      id: `notif-ai-${Date.now()}`,
+      recipient_role: 'MAIN_HEAD',
+      recipient_zone: null,
+      request_id: newId,
+      request_number: reqNum,
+      title: `CRITICAL AI ESCALATION: ${zone} Sector`,
+      message: `Immediate replenishment required for ${reqItem.supply_name} (#${reqNum})`,
+      priority: 'CRITICAL',
+      is_read: false,
+      created_at: nowIso
+    });
+
+    // Notification for Zonal Head of that zone
+    this.localNotifications.unshift({
+      id: `notif-ai-zonal-${Date.now()}`,
+      recipient_role: 'ZONAL_HEAD',
+      recipient_zone: zone,
+      request_id: newId,
+      request_number: reqNum,
+      title: `AI Escalated Critical Shortage to Main Head`,
+      message: `${reqItem.supply_name}: ${reqItem.projected_shortfall.toLocaleString()} ${reqItem.unit} shortfall (#${reqNum})`,
+      priority: 'CRITICAL',
+      is_read: false,
+      created_at: nowIso
+    });
+
+    this.persistState();
+
+    // Buzz ONCE for new critical escalation
+    alertSoundService.playCriticalBuzzer();
+
+    // Persist to Supabase if connected
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('logistics_requests').insert([{
+          request_number: reqNum,
+          created_by_name: 'AI Predictive Engine',
+          created_by_role: 'SYSTEM',
+          zone,
+          request_type: 'Emergency Requirement',
+          priority: 'CRITICAL',
+          title: `[AI DETECTED] Critical Shortage: ${reqItem.supply_name}`,
+          description: explanation,
+          requested_supply: reqItem.supply_name,
+          requested_quantity: reqItem.suggested_order_qty || reqItem.projected_shortfall,
+          unit: reqItem.unit,
+          status: 'PENDING'
+        }]);
+      } catch (err) {
+        try {
+          await supabase.from('alerts').insert([{
+            alert_type: 'PREDICTIVE SHORTAGE',
+            severity: 'CRITICAL',
+            title: `[AI DETECTED] Critical Shortage: ${reqItem.supply_name} (${zone})`,
+            message: explanation,
+            status: 'ACTIVE'
+          }]);
+        } catch (e) {}
+      }
+    }
+
+    return newEscalation;
   }
 
   /**

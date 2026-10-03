@@ -61,7 +61,7 @@ export const HelpPage: React.FC = () => {
             {[
               { step: '1', title: 'Open Dashboard', desc: 'Inspect Supply Readiness, Weather Risk, and Priority Shortage Alerts across all regional zones.' },
               { step: '2', title: 'Review Bhuvan Map', desc: 'Interact with the official Government of India Bhuvan NRSC geospatial layer for Srinagar, Jaisalmer, Ahmedabad, and Kutch.' },
-              { step: '3', title: 'Inspect Supplies', desc: 'Review on-hand stock and days of cover. Adjust stock values with instant recalculation and Supabase persistence.' },
+              { step: '3', title: 'Inspect Supplies', desc: 'Review on-hand stock and days of cover. Adjust stock values with instant recalculation and database persistence.' },
               { step: '4', title: 'Evaluate Forecast', desc: 'Examine predicted demand curves cross-referenced against historical burn rates and IMD precipitation.' },
               { step: '5', title: 'Tactical Weather Forecasting', desc: 'Monitor live sector meteorological telemetry, mountain pass transit advisories, and 7-day corridor forecasts.' },
               { step: '6', title: 'Manage Alerts', desc: 'Filter by location and severity. Acknowledge warnings or mark directives resolved with automatic archiving.' },

@@ -144,66 +144,78 @@ export const WeatherPage: React.FC<WeatherPageProps> = ({
   return (
     <div className="space-y-6 font-mono text-xs">
       {/* Top Header Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#D8DFD5] pb-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="w-2.5 h-6 bg-[#355E3B] inline-block rounded-xs"></span>
-            <h1 className="font-tactical text-2xl font-bold tracking-wider text-[#1F2933] uppercase">
-              {isMainHead ? 'Central Logistics Weather Surveillance' : `${effectiveZone.toUpperCase()} LOGISTICS WEATHER FORECAST`}
-            </h1>
-            <span className={`px-2 py-0.5 rounded-xs text-[10px] font-bold uppercase tracking-wider ${
-              isMainHead ? 'bg-[#355E3B] text-white' : 'bg-[#6B7444] text-white'
-            }`}>
-              {isMainHead ? '★ ALL 4 ZONES' : `⚑ ${effectiveZone.toUpperCase()} SECTOR`}
-            </span>
+      <div className="bg-white border border-[#D8DFD5] p-5 rounded-xs shadow-xs space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#F0F4EE] pb-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="w-2.5 h-6 bg-[#355E3B] inline-block rounded-xs"></span>
+              <h1 className="font-tactical text-2xl font-bold tracking-wider text-[#1F2933] uppercase">
+                Weather & Logistics Forecast
+              </h1>
+              <span className={`px-2.5 py-0.5 rounded-xs text-[10px] font-bold uppercase tracking-wider ${
+                isMainHead ? 'bg-[#355E3B] text-white' : 'bg-[#6B7444] text-white'
+              }`}>
+                {isMainHead ? '★ COMMAND OVERSIGHT' : `⚑ ${effectiveZone.toUpperCase()} SECTOR`}
+              </span>
+            </div>
+            <p className="text-[#52606D]">
+              {isMainHead 
+                ? 'Sector meteorological telemetry, corridor pass hazards & logistics transit risk assessment'
+                : `Strictly isolated weather telemetry & 7-day operational transport advisory for ${effectiveZone} logistics corridors`}
+            </p>
           </div>
-          <p className="text-[#52606D]">
-            {isMainHead 
-              ? 'Multi-sector meteorological telemetry, corridor pass hazards & 7-day predictive impact analysis'
-              : `Strictly isolated weather telemetry & 7-day operational transport advisory for ${effectiveZone} logistics corridors`}
-          </p>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Weather Data Transparency */}
+            <DataStatus
+              mode={weatherStatus.mode}
+              source={weatherStatus.source || 'IMD Telemetry'}
+              updated={weatherStatus.lastUpdated}
+              size="sm"
+            />
+
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#F0F4EE] border border-[#D8DFD5] text-[#1F2933] rounded-xs font-semibold shadow-xs transition-colors cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-[#355E3B] ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span>{isRefreshing ? 'Syncing...' : 'Refresh Telemetry'}</span>
+            </button>
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <DataStatus
-            mode={weatherStatus.mode}
-            source="IMD (India Meteorological Department)"
-            updated={weatherStatus.lastUpdated}
-            size="sm"
-          />
-
-          <button
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#F0F4EE] border border-[#D8DFD5] text-[#1F2933] rounded-xs font-semibold shadow-xs transition-colors cursor-pointer"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 text-[#355E3B] ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span>{isRefreshing ? 'Syncing...' : 'Refresh Telemetry'}</span>
-          </button>
-
-          {/* Zone Selector: Only for Main Head */}
-          {isMainHead ? (
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-[#52606D] text-[11px] uppercase">Zone:</span>
+        {/* Sector Selection Control */}
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-1">
+          <div className="flex items-center gap-3">
+            <span className="font-tactical font-bold text-xs uppercase text-[#1F2933] flex items-center gap-1.5">
+              <MapPin className="w-4 h-4 text-[#355E3B]" />
+              Select Operational Sector:
+            </span>
+            {isMainHead ? (
               <select
                 value={selectedZone}
                 onChange={(e) => setSelectedZone(e.target.value)}
-                className="bg-white border border-[#D8DFD5] focus:border-[#355E3B] text-xs font-bold text-[#1F2933] px-3.5 py-1.5 rounded-xs focus:outline-hidden cursor-pointer shadow-xs"
+                className="bg-[#F7F8F4] border border-[#D8DFD5] focus:border-[#355E3B] text-xs font-bold text-[#1F2933] px-3.5 py-1.5 rounded-xs focus:outline-hidden cursor-pointer shadow-xs"
               >
-                <option value="Srinagar">Srinagar (Mountain/Cold)</option>
-                <option value="Jaisalmer">Jaisalmer (Desert/Arid)</option>
-                <option value="Ahmedabad">Ahmedabad (Central Plains)</option>
-                <option value="Kutch">Kutch (Coastal Marsh)</option>
+                <option value="Srinagar">Srinagar (Mountain / Cold High Altitude)</option>
+                <option value="Jaisalmer">Jaisalmer (Desert / Arid Heat)</option>
+                <option value="Ahmedabad">Ahmedabad (Central Plains Hub)</option>
+                <option value="Kutch">Kutch (Coastal Marsh & Salinity)</option>
               </select>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-[#52606D] text-[11px] uppercase">Zone:</span>
-              <span className="px-2.5 py-1 bg-[#E8EEE5] text-[#355E3B] border border-[#CAD3C8] rounded-xs font-bold uppercase">
-                MY ZONE: {effectiveZone}
+            ) : (
+              <span className="px-3 py-1 bg-[#E8EEE5] text-[#355E3B] border border-[#CAD3C8] rounded-xs font-bold uppercase">
+                {effectiveZone} (Assigned Command Zone)
               </span>
-            </div>
-          )}
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-bold text-[#52606D] uppercase">Sector Weather Risk:</span>
+            <span className={`px-2.5 py-0.5 rounded-xs text-[10px] font-bold uppercase border ${getWarningBadge(activeObs?.warning_level || 'GREEN')}`}>
+              {activeObs?.warning_level === 'RED' ? 'CRITICAL RISK' : activeObs?.warning_level === 'ORANGE' ? 'HIGH RISK' : activeObs?.warning_level === 'YELLOW' ? 'MODERATE RISK' : 'LOW RISK'}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -216,49 +228,6 @@ export const WeatherPage: React.FC<WeatherPageProps> = ({
         }`}>
           <Info className="w-4 h-4 shrink-0" />
           <span>{refreshFeedback}</span>
-        </div>
-      )}
-
-      {/* Main Head Multi-Zone Executive Comparison Cards */}
-      {isMainHead && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="font-tactical text-xs font-bold uppercase tracking-wider text-[#1F2933]">
-              All 4 Operational Sectors — Live Weather Overview (Click to Inspect)
-            </span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {observations.map((obs) => {
-              const zoneName = obs.location_name?.replace(' Logistics Zone', '').replace(' Logistics Base', '') || 'Sector';
-              const isSelected = matchesZone(selectedZone, zoneName);
-              return (
-                <div
-                  key={obs.id}
-                  onClick={() => setSelectedZone(zoneName)}
-                  className={`p-3.5 rounded-xs border cursor-pointer transition-colors shadow-xs ${
-                    isSelected
-                      ? 'bg-[#E8EEE5] border-[#355E3B] ring-1 ring-[#355E3B]'
-                      : 'bg-white border-[#D8DFD5] hover:border-[#6B7444]'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-tactical font-bold text-sm text-[#1F2933]">{zoneName}</span>
-                    <span className={`px-2 py-0.5 rounded-xs text-[9px] font-bold uppercase border ${getWarningBadge(obs.warning_level)}`}>
-                      {obs.warning_level}
-                    </span>
-                  </div>
-                  <div className="flex items-baseline justify-between mb-2">
-                    <span className="font-tactical text-2xl font-bold text-[#1F2933]">{obs.temperature_c}°C</span>
-                    <span className="text-[#52606D] font-semibold text-[11px] truncate max-w-[130px]">{obs.weather_condition}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-1 text-[10px] text-[#52606D] border-t border-[#F0F4EE] pt-2">
-                    <span>Rain: <strong className="text-[#1F2933]">{obs.rainfall_mm} mm</strong></span>
-                    <span>Wind: <strong className="text-[#1F2933]">{obs.wind_speed_kmh} km/h</strong></span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
         </div>
       )}
 

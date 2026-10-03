@@ -47,6 +47,7 @@ export type RequestStatus = 'PENDING' | 'ACKNOWLEDGED' | 'IN_PROGRESS' | 'RESOLV
 export interface LogisticsRequest {
   id: string;
   request_number: string;
+  source?: 'AI DETECTED' | 'MANUAL';
   created_by?: string;
   created_by_name: string;
   created_by_role: string;
@@ -60,6 +61,14 @@ export interface LogisticsRequest {
   unit?: string;
   status: RequestStatus;
   main_head_response?: string;
+  current_inventory?: number;
+  forecast_demand?: number;
+  projected_shortage?: number;
+  lead_time_days?: number;
+  transport_capacity_pct?: number;
+  weather_risk_level?: string;
+  terrain_risk_note?: string;
+  ai_explanation?: string;
   acknowledged_at?: string;
   in_progress_at?: string;
   resolved_at?: string;
