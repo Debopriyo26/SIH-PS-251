@@ -37,7 +37,7 @@ export const SuppliesPage: React.FC<SuppliesPageProps> = ({
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [inspectingItem, setInspectingItem] = useState<InventoryRecord | null>(null);
-  const [adjustStockVal, setAdjustStockVal] = useState<number>(0);
+  const [adjustStockVal, setAdjustStockVal] = useState<number | ''>(0);
   const [updatedItemId, setUpdatedItemId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -66,7 +66,7 @@ export const SuppliesPage: React.FC<SuppliesPageProps> = ({
     if (!inspectingItem) return;
 
     const itemToUpdate = inspectingItem;
-    const newQty = Math.max(0, Math.round(Number(adjustStockVal)));
+    const newQty = Math.max(0, parseInt(String(adjustStockVal), 10) || 0);
     setErrorMessage('');
     setIsSaving(true);
 
@@ -381,10 +381,33 @@ export const SuppliesPage: React.FC<SuppliesPageProps> = ({
                   step="1"
                   required
                   value={adjustStockVal}
-                  onChange={(e) => setAdjustStockVal(Math.max(0, Number(e.target.value)))}
-                  className="w-full px-3 py-2 bg-white border border-[#D8DFD5] focus:border-[#355E3B] text-[#1F2933] font-mono text-sm font-bold rounded-xs focus:outline-hidden focus:ring-2 focus:ring-yellow-500"
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    if (raw === '') {
+                      setAdjustStockVal('');
+                    } else {
+                      const cleaned = raw.replace(/^0+(?=\d)/, '');
+                      const num = Number(cleaned);
+                      setAdjustStockVal(isNaN(num) ? '' : Math.max(0, num));
+                    }
+                  }}
+                  onFocus={(e) => {
+                    if (adjustStockVal === 0) {
+                      setAdjustStockVal('');
+                    } else {
+                      try {
+                        e.currentTarget.select();
+                      } catch (_) {}
+                    }
+                  }}
+                  onBlur={() => {
+                    if (adjustStockVal === '') {
+                      setAdjustStockVal(0);
+                    }
+                  }}
+                  className="w-full px-3.5 py-2 bg-white border border-[#D8DFD5] focus:border-[#355E3B] text-[#1F2933] font-mono text-sm font-bold rounded-xs focus:outline-hidden focus:ring-2 focus:ring-yellow-500"
                 />
-                <div className="text-[10px] text-[#52606D] mt-1">
+                <div className="text-[10px] text-[#52606D] mt-1 truncate">
                   Safety Threshold: {inspectingItem.safety_threshold.toLocaleString()} • Daily Burn: {inspectingItem.daily_consumption.toLocaleString()}
                 </div>
               </div>
