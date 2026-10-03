@@ -61,6 +61,21 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const isMainHead = user?.role === 'MAIN_HEAD';
   const effectiveZone = (user?.zone as LogisticsZone) || 'Srinagar';
 
+  // Basic Role-Based Access Control (RBAC): Critical alerts strictly routed to Commander or Main Head
+  const isCommanderOrMainHead = (() => {
+    let r: string | undefined = user?.role;
+    if (!r && typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('vyomix_auth_user');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          r = parsed?.role;
+        }
+      } catch (e) {}
+    }
+    return r === 'MAIN_HEAD' || r === 'Commander' || r === 'Main Head';
+  })();
+
   useEffect(() => {
     loadData();
     loadRequestsData();
@@ -644,45 +659,47 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
         {/* Right 5 Columns: Important Predictive Alert & Locations Requiring Attention */}
         <div className="lg:col-span-5 space-y-4 flex flex-col justify-between">
-          {/* Important Predictive Alert (Requirement 1) */}
-          {priorityAlert ? (
-            <div className="p-4 bg-white border-l-4 border-l-[#B42318] border border-[#D8DFD5] rounded-xs shadow-xs space-y-2 font-mono">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] uppercase font-bold text-[#B42318] bg-[#FEE4E2] px-2 py-0.5 rounded-xs border border-[#FDA29B]">
-                  IMPORTANT PREDICTIVE ALERT
-                </span>
-                <span className="text-[11px] text-[#52606D] font-medium">{priorityAlert.location_name}</span>
+          {/* Critical Alerts Container: Strictly visible for Commander or Main Head via RBAC */}
+          <div id="critical-alerts-container" className={isCommanderOrMainHead ? 'block' : 'hidden'}>
+            {priorityAlert ? (
+              <div className="p-4 md:p-6 bg-white border-l-4 border-l-[#B42318] border border-[#D8DFD5] rounded-xs shadow-xs space-y-2 font-mono">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-[#B42318] bg-[#FEE4E2] px-2 py-0.5 rounded-xs border border-[#FDA29B]">
+                    CRITICAL ALERT
+                  </span>
+                  <span className="text-[11px] text-[#52606D] font-medium">{priorityAlert.location_name}</span>
+                </div>
+                <h3 className="font-tactical font-bold text-sm text-[#1F2933]">
+                  {priorityAlert.title}
+                </h3>
+                <p className="text-xs text-[#52606D] line-clamp-2">
+                  {priorityAlert.message}
+                </p>
+                <div className="pt-2 flex items-center justify-between border-t border-[#F0F4EE]">
+                  <button
+                    onClick={() => onNavigate('forecast')}
+                    className="text-xs text-[#355E3B] hover:underline font-tactical font-bold tracking-wider uppercase flex items-center gap-1 cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-yellow-500"
+                  >
+                    <span>VIEW DETAILS</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => onNavigate('alerts')}
+                    className="px-3 py-1 bg-[#355E3B] hover:bg-[#1F3D27] text-white text-xs rounded-xs font-semibold cursor-pointer shadow-xs transition-colors focus:outline-hidden focus:ring-2 focus:ring-yellow-500"
+                  >
+                    Acknowledge / Resolve
+                  </button>
+                </div>
               </div>
-              <h3 className="font-tactical font-bold text-sm text-[#1F2933]">
-                {priorityAlert.title}
-              </h3>
-              <p className="text-xs text-[#52606D] line-clamp-2">
-                {priorityAlert.message}
-              </p>
-              <div className="pt-2 flex items-center justify-between border-t border-[#F0F4EE]">
-                <button
-                  onClick={() => onNavigate('forecast')}
-                  className="text-xs text-[#355E3B] hover:underline font-tactical font-bold tracking-wider uppercase flex items-center gap-1 cursor-pointer"
-                >
-                  <span>VIEW DETAILS</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={() => onNavigate('alerts')}
-                  className="px-3 py-1 bg-[#355E3B] hover:bg-[#1F3D27] text-white text-xs rounded-xs font-semibold cursor-pointer shadow-xs transition-colors"
-                >
-                  Acknowledge / Resolve
-                </button>
+            ) : (
+              <div className="p-4 md:p-6 bg-white border border-[#D8DFD5] rounded-xs shadow-xs text-center font-mono text-xs text-[#52606D]">
+                All regional inventory corridors operating within safety buffers.
               </div>
-            </div>
-          ) : (
-            <div className="p-4 bg-white border border-[#D8DFD5] rounded-xs shadow-xs text-center font-mono text-xs text-[#52606D]">
-              All regional inventory corridors operating within safety buffers.
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* Locations Requiring Attention (Requirement 1) */}
-          <div className="bg-white border border-[#D8DFD5] p-4 rounded-xs space-y-3 shadow-xs flex-1">
+          {/* Locations Requiring Attention */}
+          <div className="bg-white border border-[#D8DFD5] p-4 md:p-6 rounded-xs space-y-3 shadow-xs flex-1">
             <div className="flex items-center justify-between border-b border-[#F0F4EE] pb-2">
               <span className="text-xs font-tactical uppercase tracking-wider text-[#1F2933] font-bold">
                 Locations Requiring Attention ({attentionLocations.length})

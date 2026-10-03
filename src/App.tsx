@@ -185,7 +185,7 @@ function MainAppContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F8F4] text-[#1F2933] flex flex-col font-sans">
+    <div className="min-h-screen bg-[#F7F8F4] text-[#1F2933] flex flex-col font-sans overflow-x-hidden">
       {/* Tactical Header with Simplified 6-item Nav, Profile Dropdown, and Help */}
       <Header
         currentTab={currentTab}

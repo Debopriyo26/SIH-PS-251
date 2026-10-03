@@ -170,7 +170,7 @@ export const Header: React.FC<HeaderProps> = ({
         )}
 
         {/* Top-Right Controls - Streamlined, non-congested */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
           {isAuthenticated ? (
             <>
               {/* Notification Center Popover */}
@@ -264,21 +264,22 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
 
               {/* The Single Last Button: User's Name with Dropdown Menu (Sound + My Requests + Help + Sign Out) */}
-              <div className="relative" ref={profileRef}>
+              <div className="relative min-w-0" ref={profileRef}>
                 <button
+                  type="button"
                   onClick={() => setProfileOpen(!profileOpen)}
                   aria-expanded={profileOpen}
                   title="User Command Profile & Options"
-                  className="h-8 inline-flex items-center gap-2 px-3 rounded-xs bg-[#F0F4EE] hover:bg-[#E8EEE5] border border-[#D8DFD5] font-mono text-xs text-[#1F2933] transition-colors cursor-pointer shadow-xs"
+                  className="h-8 inline-flex items-center gap-2 px-2.5 sm:px-3 rounded-xs bg-[#F0F4EE] hover:bg-[#E8EEE5] border border-[#D8DFD5] font-mono text-xs text-[#1F2933] transition-colors cursor-pointer shadow-xs min-w-0 max-w-[150px] sm:max-w-none focus:outline-hidden focus:ring-2 focus:ring-yellow-500"
                 >
                   <div className="w-5 h-5 rounded-full bg-[#355E3B] text-white flex items-center justify-center font-bold text-[10px] border border-[#1F3D27] shrink-0">
                     {user?.fullName?.charAt(0) || 'U'}
                   </div>
-                  <div className="flex flex-col text-left justify-center">
-                    <span className="font-bold text-xs text-[#1F2933] leading-none">
+                  <div className="flex flex-col text-left justify-center min-w-0">
+                    <span className="font-bold text-xs text-[#1F2933] leading-none truncate max-w-[100px] md:max-w-none">
                       {user?.fullName || 'Officer'}
                     </span>
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-[#355E3B] leading-none mt-0.5">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-[#355E3B] leading-none mt-0.5 truncate max-w-[100px] md:max-w-none">
                       {user?.role === 'MAIN_HEAD' ? '★ MAIN HEAD' : `⚑ ${user?.zone || 'ZONAL'} HEAD`}
                     </span>
                   </div>
