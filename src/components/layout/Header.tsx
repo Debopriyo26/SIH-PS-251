@@ -1,26 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   LayoutDashboard, 
   MapPin, 
   Boxes, 
   TrendingUp, 
-  Sliders, 
+  CloudSun, 
   Bell, 
   HelpCircle, 
   User as UserIcon, 
   LogOut, 
-  Database, 
   ChevronDown, 
   Menu, 
   X,
-  Bot,
   Volume2,
   VolumeX,
   Inbox,
-  CheckCheck,
-  CheckCircle2,
   Clock,
-  ShieldAlert
+  ShieldAlert,
+  Sliders
 } from 'lucide-react';
 import { Logo } from '../common/Logo';
 import { useAuth } from '../../lib/authContext';
@@ -34,7 +31,7 @@ export type NavTab =
   | 'locations'
   | 'supplies'
   | 'forecast'
-  | 'simulator'
+  | 'weather'
   | 'alerts'
   | 'communication'
   | 'help'
@@ -62,6 +59,8 @@ export const Header: React.FC<HeaderProps> = ({
   const [soundEnabled, setSoundEnabled] = useState<boolean>(alertSoundService.isSoundEnabled());
   const [notifications, setNotifications] = useState<ZonalNotification[]>([]);
   const [pendingReqCount, setPendingReqCount] = useState<number>(0);
+  const profileRef = useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
 
   const isMainHead = user?.role === 'MAIN_HEAD';
 
@@ -80,7 +79,22 @@ export const Header: React.FC<HeaderProps> = ({
     return () => clearInterval(interval);
   }, [isAuthenticated, user, currentTab]);
 
-  const handleToggleSound = () => {
+  // Click outside listener for popovers
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setProfileOpen(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+        setNotifOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleToggleSound = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     const updated = alertSoundService.toggleSound();
     setSoundEnabled(updated);
   };
@@ -103,19 +117,13 @@ export const Header: React.FC<HeaderProps> = ({
 
   const unreadNotifCount = notifications.filter(n => !n.is_read).length;
 
-  // Primary Navigation items
+  // Primary Navigation items - Decongested, keeping core features in place, replacing Simulator with Weather
   const navItems = [
     { id: 'dashboard' as NavTab, label: 'Dashboard', icon: LayoutDashboard },
-    { 
-      id: 'communication' as NavTab, 
-      label: isMainHead ? 'Zonal Requests' : 'My Requests', 
-      icon: Inbox, 
-      badge: pendingReqCount 
-    },
     { id: 'locations' as NavTab, label: 'Locations', icon: MapPin },
     { id: 'supplies' as NavTab, label: 'Supplies', icon: Boxes },
     { id: 'forecast' as NavTab, label: 'Forecast', icon: TrendingUp },
-    { id: 'simulator' as NavTab, label: 'Simulator', icon: Sliders },
+    { id: 'weather' as NavTab, label: 'Weather', icon: CloudSun },
     { id: 'alerts' as NavTab, label: 'Alerts', icon: Bell, badge: unreadAlertsCount },
   ];
 
@@ -161,42 +169,12 @@ export const Header: React.FC<HeaderProps> = ({
           </nav>
         )}
 
-        {/* Top-Right Controls */}
-        <div className="flex items-center gap-2">
+        {/* Top-Right Controls - Streamlined, non-congested */}
+        <div className="flex items-center gap-2.5">
           {isAuthenticated ? (
             <>
-              {/* Sound ON/OFF Toggle (Requirement 14, 41) */}
-              <button
-                onClick={handleToggleSound}
-                title={soundEnabled ? 'Alert Sound: ON (Click to Mute)' : 'Alert Sound: OFF (Click to Enable)'}
-                className={`h-8 inline-flex items-center gap-1.5 px-2.5 rounded-xs border font-mono text-xs transition-colors cursor-pointer ${
-                  soundEnabled
-                    ? 'bg-[#E8F5E9] text-[#2F6B3C] border-[#A5D6A7]'
-                    : 'bg-[#F0F4EE] text-[#52606D] border-[#D8DFD5]'
-                }`}
-              >
-                {soundEnabled ? (
-                  <Volume2 className="w-3.5 h-3.5 text-[#2F6B3C] shrink-0" />
-                ) : (
-                  <VolumeX className="w-3.5 h-3.5 text-[#52606D] shrink-0" />
-                )}
-                <span className="hidden md:inline font-semibold">Sound: {soundEnabled ? 'ON' : 'OFF'}</span>
-              </button>
-
-              {/* Optional AI Assistant quick button */}
-              {onOpenAssist && (
-                <button
-                  onClick={onOpenAssist}
-                  title="Ask VYOMIX Assistant"
-                  className="hidden sm:inline-flex h-8 items-center gap-1.5 px-2.5 rounded-xs bg-[#F0F4EE] hover:bg-[#E8EEE5] text-[#355E3B] border border-[#D8DFD5] font-mono text-xs transition-colors cursor-pointer font-semibold"
-                >
-                  <Bot className="w-3.5 h-3.5 text-[#355E3B] shrink-0" />
-                  <span>AI Assist</span>
-                </button>
-              )}
-
               {/* Notification Center Popover */}
-              <div className="relative">
+              <div className="relative" ref={notifRef}>
                 <button
                   onClick={() => setNotifOpen(!notifOpen)}
                   title="Logistics & Zonal Notifications"
@@ -285,118 +263,139 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
               </div>
 
-              {/* Help button */}
-              <button
-                onClick={() => onSelectTab('help')}
-                className={`h-8 inline-flex items-center gap-1.5 px-3 rounded-xs font-mono text-xs tracking-wider border transition-colors cursor-pointer font-semibold ${
-                  currentTab === 'help'
-                    ? 'bg-[#355E3B] text-white border-[#1F3D27]'
-                    : 'text-[#52606D] hover:text-[#1F2933] bg-[#F0F4EE] border-[#D8DFD5]'
-                }`}
-              >
-                <HelpCircle className="w-3.5 h-3.5 text-[#6B7444] shrink-0" />
-                <span className="hidden sm:inline">Help</span>
-              </button>
-
-              {/* Profile Dropdown */}
-              <div className="relative">
+              {/* The Single Last Button: User's Name with Dropdown Menu (Sound + My Requests + Help + Sign Out) */}
+              <div className="relative" ref={profileRef}>
                 <button
                   onClick={() => setProfileOpen(!profileOpen)}
-                  className="h-8 inline-flex items-center gap-2 px-2.5 rounded-xs bg-[#F0F4EE] hover:bg-[#E8EEE5] border border-[#D8DFD5] font-mono text-xs text-[#1F2933] transition-colors cursor-pointer"
+                  aria-expanded={profileOpen}
+                  title="User Command Profile & Options"
+                  className="h-8 inline-flex items-center gap-2 px-3 rounded-xs bg-[#F0F4EE] hover:bg-[#E8EEE5] border border-[#D8DFD5] font-mono text-xs text-[#1F2933] transition-colors cursor-pointer shadow-xs"
                 >
                   <div className="w-5 h-5 rounded-full bg-[#355E3B] text-white flex items-center justify-center font-bold text-[10px] border border-[#1F3D27] shrink-0">
                     {user?.fullName?.charAt(0) || 'U'}
                   </div>
                   <div className="flex flex-col text-left justify-center">
-                    <span className="hidden md:inline font-semibold text-xs text-[#1F2933] leading-none">{user?.fullName || 'Officer'}</span>
-                    <span className="hidden md:inline text-[9px] font-bold uppercase tracking-wider text-[#355E3B] leading-none mt-0.5">
+                    <span className="font-bold text-xs text-[#1F2933] leading-none">
+                      {user?.fullName || 'Officer'}
+                    </span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-[#355E3B] leading-none mt-0.5">
                       {user?.role === 'MAIN_HEAD' ? '★ MAIN HEAD' : `⚑ ${user?.zone || 'ZONAL'} HEAD`}
                     </span>
                   </div>
-                  <ChevronDown className="w-3 h-3 text-[#52606D] shrink-0" />
+                  <ChevronDown className={`w-3.5 h-3.5 text-[#52606D] shrink-0 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
                 </button>
 
+                {/* Dropdown Menu */}
                 {profileOpen && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white border border-[#D8DFD5] rounded-xs shadow-xl py-1 z-50 font-mono text-xs">
-                    <div className="px-3 py-2.5 border-b border-[#F0F4EE]">
-                      <div className="font-bold text-[#1F2933] truncate">{user?.fullName}</div>
-                      <div className="text-[10px] text-[#52606D] truncate">{user?.email}</div>
-                      <div className="text-[10px] text-[#355E3B] font-bold mt-1 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#355E3B]"></span>
-                        <span>{user?.role === 'MAIN_HEAD' ? 'Main Logistics Head' : `Zonal Head — ${user?.zone}`}</span>
+                  <div className="absolute right-0 mt-2 w-72 bg-white border border-[#D8DFD5] rounded-xs shadow-2xl py-1.5 z-50 font-mono text-xs">
+                    {/* User Info Header */}
+                    <div className="px-3.5 py-2.5 border-b border-[#F0F4EE] bg-[#F9FAF8]">
+                      <div className="font-bold text-sm text-[#1F2933] truncate">
+                        {user?.fullName || 'Logistics Officer'}
+                      </div>
+                      <div className="text-[10px] text-[#52606D] truncate mt-0.5">
+                        {user?.email}
+                      </div>
+                      <div className="text-[10px] font-bold mt-1.5 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-[#355E3B]"></span>
+                        <span className="text-[#355E3B]">
+                          {user?.role === 'MAIN_HEAD' ? 'Main Logistics Command Head' : `Zonal Logistics Head — ${user?.zone}`}
+                        </span>
                       </div>
                     </div>
 
-                    {/* Alert sound toggle inside profile dropdown (Requirement 14, 41) */}
-                    <div className="px-3 py-2 border-b border-[#F0F4EE] flex items-center justify-between text-xs">
-                      <span className="text-[#52606D] flex items-center gap-1.5">
-                        <Volume2 className="w-3.5 h-3.5 text-[#355E3B]" />
-                        <span>Alert Sound</span>
-                      </span>
+                    <div className="py-1 divide-y divide-[#F0F4EE]">
+                      {/* 1. Sound Option */}
+                      <div className="px-3.5 py-2.5 flex items-center justify-between hover:bg-[#F9FAF8] transition-colors">
+                        <div className="flex items-center gap-2.5 text-[#1F2933]">
+                          {soundEnabled ? (
+                            <Volume2 className="w-4 h-4 text-[#2F6B3C] shrink-0" />
+                          ) : (
+                            <VolumeX className="w-4 h-4 text-[#52606D] shrink-0" />
+                          )}
+                          <div>
+                            <span className="font-semibold block text-xs">Alert Audio</span>
+                            <span className="text-[10px] text-[#52606D] block">Critical sound notifications</span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleToggleSound}
+                          className={`px-2.5 py-1 rounded-xs text-[11px] font-bold border transition-colors cursor-pointer ${
+                            soundEnabled
+                              ? 'bg-[#E8F5E9] text-[#2F6B3C] border-[#A5D6A7]'
+                              : 'bg-[#F0F4EE] text-[#52606D] border-[#D8DFD5]'
+                          }`}
+                        >
+                          {soundEnabled ? 'ON' : 'OFF'}
+                        </button>
+                      </div>
+
+                      {/* 2. My Requests Additionally */}
                       <button
-                        onClick={handleToggleSound}
-                        className={`px-2 py-0.5 rounded-xs text-[11px] font-bold cursor-pointer border ${
-                          soundEnabled
-                            ? 'bg-[#E8F5E9] text-[#2F6B3C] border-[#A5D6A7]'
-                            : 'bg-[#F0F4EE] text-[#52606D] border-[#D8DFD5]'
-                        }`}
+                        type="button"
+                        onClick={() => {
+                          setProfileOpen(false);
+                          onSelectTab('communication');
+                        }}
+                        className="w-full text-left px-3.5 py-2.5 text-[#1F2933] hover:bg-[#F0F4EE] flex items-center justify-between cursor-pointer transition-colors"
                       >
-                        {soundEnabled ? 'ON' : 'OFF'}
+                        <div className="flex items-center gap-2.5">
+                          <Inbox className="w-4 h-4 text-[#355E3B] shrink-0" />
+                          <div>
+                            <span className="font-semibold block text-xs">
+                              {isMainHead ? 'Zonal Requests' : 'My Requests'}
+                            </span>
+                            <span className="text-[10px] text-[#52606D] block">
+                              {isMainHead ? 'Review sector replenishment dispatches' : 'Track & submit zone support requests'}
+                            </span>
+                          </div>
+                        </div>
+                        {pendingReqCount > 0 && (
+                          <span className="px-2 py-0.5 rounded-full bg-[#B42318] text-white text-[10px] font-bold">
+                            {pendingReqCount}
+                          </span>
+                        )}
                       </button>
+
+                      {/* 3. Help */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProfileOpen(false);
+                          onSelectTab('help');
+                        }}
+                        className="w-full text-left px-3.5 py-2.5 text-[#1F2933] hover:bg-[#F0F4EE] flex items-center gap-2.5 cursor-pointer transition-colors"
+                      >
+                        <HelpCircle className="w-4 h-4 text-[#6B7444] shrink-0" />
+                        <div>
+                          <span className="font-semibold block text-xs">Help & Guidance</span>
+                          <span className="text-[10px] text-[#52606D] block">Operational manual & SOP protocols</span>
+                        </div>
+                      </button>
+
+                      {/* 4. Sign Out */}
+                      <div className="pt-1">
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            setProfileOpen(false);
+                            await logout();
+                            onSelectTab('landing');
+                          }}
+                          className="w-full text-left px-3.5 py-2.5 text-[#B42318] hover:bg-[#FEE4E2] flex items-center gap-2.5 font-bold cursor-pointer transition-colors"
+                        >
+                          <LogOut className="w-4 h-4 shrink-0" />
+                          <div>
+                            <span className="block text-xs">Sign Out</span>
+                            <span className="text-[10px] text-[#B42318]/80 font-normal block">Disconnect active logistics session</span>
+                          </div>
+                        </button>
+                      </div>
                     </div>
-
-                    <button
-                      onClick={() => {
-                        setProfileOpen(false);
-                        onSelectTab('help');
-                      }}
-                      className="w-full text-left px-3 py-2 text-[#52606D] hover:text-[#1F2933] hover:bg-[#F0F4EE] flex items-center gap-2 cursor-pointer font-medium"
-                    >
-                      <HelpCircle className="w-3.5 h-3.5 text-[#6B7444]" />
-                      <span>Help & Documentation</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setProfileOpen(false);
-                        onSelectTab('help');
-                      }}
-                      className="w-full text-left px-3 py-2 text-[#52606D] hover:text-[#1F2933] hover:bg-[#F0F4EE] flex items-center gap-2 cursor-pointer font-medium"
-                    >
-                      <Database className="w-3.5 h-3.5 text-[#355E3B]" />
-                      <span>Data & Integrations</span>
-                    </button>
-
-                    <div className="border-t border-[#F0F4EE] my-1" />
-
-                    <button
-                      onClick={async () => {
-                        setProfileOpen(false);
-                        await logout();
-                        onSelectTab('landing');
-                      }}
-                      className="w-full text-left px-3 py-2 text-[#B42318] hover:bg-[#FEE4E2] flex items-center gap-2 font-semibold cursor-pointer"
-                    >
-                      <LogOut className="w-3.5 h-3.5" />
-                      <span>Logout</span>
-                    </button>
                   </div>
                 )}
               </div>
-
-              {/* Direct Sign Out Button (Requirement 2 & 8) */}
-              <button
-                onClick={async () => {
-                  setProfileOpen(false);
-                  await logout();
-                  onSelectTab('landing');
-                }}
-                title="Sign Out of VYOMIX"
-                className="h-8 inline-flex items-center gap-1.5 px-2.5 rounded-xs bg-[#FEE4E2]/50 hover:bg-[#FEE4E2] text-[#B42318] border border-[#FDA29B] font-mono text-xs font-bold transition-colors cursor-pointer shadow-xs"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Sign Out</span>
-              </button>
 
               {/* Mobile menu trigger */}
               <button
@@ -459,6 +458,25 @@ export const Header: React.FC<HeaderProps> = ({
           })}
 
           <div className="border-t border-[#F0F4EE] my-2" />
+
+          {/* My Requests in mobile drawer */}
+          <button
+            onClick={() => {
+              onSelectTab('communication');
+              setMobileMenuOpen(false);
+            }}
+            className="flex items-center justify-between px-3 py-2 text-[#52606D] hover:bg-[#F0F4EE] rounded-xs font-medium cursor-pointer"
+          >
+            <div className="flex items-center gap-2.5">
+              <Inbox className="w-4 h-4 text-[#355E3B]" />
+              <span>{isMainHead ? 'Zonal Requests' : 'My Requests'}</span>
+            </div>
+            {pendingReqCount > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-[#B42318] text-white text-[10px] font-bold">
+                {pendingReqCount}
+              </span>
+            )}
+          </button>
 
           {/* Sound toggle in mobile drawer */}
           <div className="flex items-center justify-between px-3 py-2 text-[#52606D]">

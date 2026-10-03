@@ -13,7 +13,7 @@ import { CommunicationPage } from './pages/CommunicationPage';
 import { LocationsPage } from './pages/LocationsPage';
 import { SuppliesPage } from './pages/SuppliesPage';
 import { ForecastPage } from './pages/ForecastPage';
-import { SimulatorPage } from './pages/SimulatorPage';
+import { WeatherPage } from './pages/WeatherPage';
 import { AlertsPage } from './pages/AlertsPage';
 import { HelpPage } from './pages/HelpPage';
 import { LocationNode } from './types';
@@ -118,8 +118,13 @@ function MainAppContent() {
         );
       case 'forecast':
         return <ForecastPage />;
-      case 'simulator':
-        return <SimulatorPage />;
+      case 'weather':
+        return (
+          <WeatherPage 
+            selectedLocationId={selectedLocationId}
+            onLocationChange={handleLocationChange}
+          />
+        );
       case 'alerts':
         return <AlertsPage selectedLocationId={selectedLocationId} />;
       case 'communication':

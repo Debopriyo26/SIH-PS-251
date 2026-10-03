@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, ArrowRight, Boxes, TrendingUp, Sliders } from 'lucide-react';
+import { Shield, ArrowRight, Boxes, TrendingUp, CloudSun } from 'lucide-react';
 import { Logo } from '../components/common/Logo';
 import { NavTab } from '../components/layout/Header';
 
@@ -84,11 +84,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
 
           <div className="p-5 bg-white border border-[#D8DFD5] rounded-xs space-y-2 shadow-xs">
             <div className="flex items-center gap-2 font-tactical font-bold text-sm text-[#1F2933] uppercase">
-              <Sliders className="w-4 h-4 text-[#6B7444]" />
-              <span>Scenario Simulator</span>
+              <CloudSun className="w-4 h-4 text-[#6B7444]" />
+              <span>Tactical Weather Forecasting</span>
             </div>
             <p className="font-mono text-xs text-[#52606D] leading-relaxed">
-              Stress-test supply chain viability under hypothetical weather shocks, transport corridor disruptions, and consumption surges.
+              Real-time IMD meteorological surveillance, corridor pass transit advisories, and 7-day predictive logistics impacts.
             </p>
           </div>
         </div>

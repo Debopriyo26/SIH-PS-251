@@ -6,6 +6,45 @@ import { matchesZone } from '../lib/zones';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:8000/api';
 
+const ZONE_FORECASTS_7DAYS: Record<string, WeatherForecastDay[]> = {
+  Srinagar: [
+    { date: 'Today (03 Oct)', dayName: 'Fri', tempMin: 6, tempMax: 14, rainfallMm: 18.5, rainfallProbPct: 85, condition: 'Heavy Rain / Sleet', warningLevel: 'ORANGE', source: 'IMD' },
+    { date: 'Tomorrow (04 Oct)', dayName: 'Sat', tempMin: 4, tempMax: 11, rainfallMm: 22.0, rainfallProbPct: 90, condition: 'Persistent Heavy Sleet', warningLevel: 'ORANGE', source: 'IMD' },
+    { date: '05 Oct', dayName: 'Sun', tempMin: 3, tempMax: 10, rainfallMm: 12.0, rainfallProbPct: 65, condition: 'Scattered Showers', warningLevel: 'YELLOW', source: 'IMD' },
+    { date: '06 Oct', dayName: 'Mon', tempMin: 2, tempMax: 12, rainfallMm: 4.0, rainfallProbPct: 35, condition: 'Overcast / Cold Winds', warningLevel: 'GREEN', source: 'IMD' },
+    { date: '07 Oct', dayName: 'Tue', tempMin: 3, tempMax: 15, rainfallMm: 1.0, rainfallProbPct: 20, condition: 'Partly Cloudy', warningLevel: 'GREEN', source: 'IMD' },
+    { date: '08 Oct', dayName: 'Wed', tempMin: 4, tempMax: 16, rainfallMm: 0.0, rainfallProbPct: 10, condition: 'Clear Mountain Skies', warningLevel: 'GREEN', source: 'IMD' },
+    { date: '09 Oct', dayName: 'Thu', tempMin: 5, tempMax: 16, rainfallMm: 0.0, rainfallProbPct: 5, condition: 'Clear Skies', warningLevel: 'GREEN', source: 'IMD' },
+  ],
+  Jaisalmer: [
+    { date: 'Today (03 Oct)', dayName: 'Fri', tempMin: 23, tempMax: 36, rainfallMm: 0.0, rainfallProbPct: 5, condition: 'Clear / Hot Arid', warningLevel: 'GREEN', source: 'IMD' },
+    { date: 'Tomorrow (04 Oct)', dayName: 'Sat', tempMin: 24, tempMax: 37, rainfallMm: 0.0, rainfallProbPct: 0, condition: 'Clear Skies / High Heat', warningLevel: 'GREEN', source: 'IMD' },
+    { date: '05 Oct', dayName: 'Sun', tempMin: 25, tempMax: 38, rainfallMm: 0.0, rainfallProbPct: 0, condition: 'Extreme Dry Heat', warningLevel: 'YELLOW', source: 'IMD' },
+    { date: '06 Oct', dayName: 'Mon', tempMin: 24, tempMax: 37, rainfallMm: 0.0, rainfallProbPct: 0, condition: 'Dust Haze Advisory', warningLevel: 'YELLOW', source: 'IMD' },
+    { date: '07 Oct', dayName: 'Tue', tempMin: 23, tempMax: 36, rainfallMm: 0.0, rainfallProbPct: 5, condition: 'Arid / Clear', warningLevel: 'GREEN', source: 'IMD' },
+    { date: '08 Oct', dayName: 'Wed', tempMin: 22, tempMax: 35, rainfallMm: 0.0, rainfallProbPct: 5, condition: 'Clear Desert Night', warningLevel: 'GREEN', source: 'IMD' },
+    { date: '09 Oct', dayName: 'Thu', tempMin: 22, tempMax: 34, rainfallMm: 0.0, rainfallProbPct: 5, condition: 'Clear Skies', warningLevel: 'GREEN', source: 'IMD' },
+  ],
+  Ahmedabad: [
+    { date: 'Today (03 Oct)', dayName: 'Fri', tempMin: 22, tempMax: 33, rainfallMm: 0.0, rainfallProbPct: 10, condition: 'Partly Cloudy', warningLevel: 'GREEN', source: 'IMD' },
+    { date: 'Tomorrow (04 Oct)', dayName: 'Sat', tempMin: 22, tempMax: 33, rainfallMm: 0.0, rainfallProbPct: 15, condition: 'Stable Plains Weather', warningLevel: 'GREEN', source: 'IMD' },
+    { date: '05 Oct', dayName: 'Sun', tempMin: 23, tempMax: 34, rainfallMm: 0.0, rainfallProbPct: 10, condition: 'Clear Skies', warningLevel: 'GREEN', source: 'IMD' },
+    { date: '06 Oct', dayName: 'Mon', tempMin: 23, tempMax: 34, rainfallMm: 0.0, rainfallProbPct: 10, condition: 'Clear Corridor', warningLevel: 'GREEN', source: 'IMD' },
+    { date: '07 Oct', dayName: 'Tue', tempMin: 21, tempMax: 32, rainfallMm: 0.0, rainfallProbPct: 5, condition: 'Optimal Transport', warningLevel: 'GREEN', source: 'IMD' },
+    { date: '08 Oct', dayName: 'Wed', tempMin: 21, tempMax: 32, rainfallMm: 0.0, rainfallProbPct: 5, condition: 'Clear Skies', warningLevel: 'GREEN', source: 'IMD' },
+    { date: '09 Oct', dayName: 'Thu', tempMin: 20, tempMax: 31, rainfallMm: 0.0, rainfallProbPct: 0, condition: 'Clear Skies', warningLevel: 'GREEN', source: 'IMD' },
+  ],
+  Kutch: [
+    { date: 'Today (03 Oct)', dayName: 'Fri', tempMin: 25, tempMax: 32, rainfallMm: 4.5, rainfallProbPct: 45, condition: 'Coastal Squalls', warningLevel: 'YELLOW', source: 'IMD' },
+    { date: 'Tomorrow (04 Oct)', dayName: 'Sat', tempMin: 26, tempMax: 33, rainfallMm: 6.0, rainfallProbPct: 55, condition: 'Humid Overcast / Sprinkles', warningLevel: 'YELLOW', source: 'IMD' },
+    { date: '05 Oct', dayName: 'Sun', tempMin: 26, tempMax: 33, rainfallMm: 3.0, rainfallProbPct: 40, condition: 'Coastal Mist & Marsh Fog', warningLevel: 'YELLOW', source: 'IMD' },
+    { date: '06 Oct', dayName: 'Mon', tempMin: 25, tempMax: 32, rainfallMm: 1.0, rainfallProbPct: 25, condition: 'Breezy / High Salinity', warningLevel: 'GREEN', source: 'IMD' },
+    { date: '07 Oct', dayName: 'Tue', tempMin: 25, tempMax: 32, rainfallMm: 0.5, rainfallProbPct: 20, condition: 'Partly Cloudy', warningLevel: 'GREEN', source: 'IMD' },
+    { date: '08 Oct', dayName: 'Wed', tempMin: 24, tempMax: 31, rainfallMm: 0.0, rainfallProbPct: 15, condition: 'Clear Coastal Skies', warningLevel: 'GREEN', source: 'IMD' },
+    { date: '09 Oct', dayName: 'Thu', tempMin: 24, tempMax: 31, rainfallMm: 0.0, rainfallProbPct: 10, condition: 'Clear Skies', warningLevel: 'GREEN', source: 'IMD' },
+  ]
+};
+
 class WeatherService {
   private mode: DataMode = 'DEMO';
   private lastSyncTime: string | null = null;
@@ -48,8 +87,19 @@ class WeatherService {
     return this.observations;
   }
 
-  public async getForecast7Days(locationId?: string, userRole?: string, userZone?: string | null): Promise<WeatherForecastDay[]> {
-    return this.forecastDays;
+  public async getForecast7Days(locationIdOrZone?: string, userRole?: string, userZone?: string | null): Promise<WeatherForecastDay[]> {
+    // If Zonal Head, strictly enforce their assigned zone
+    let targetZone = 'Srinagar';
+    if (userRole === 'ZONAL_HEAD' && userZone) {
+      targetZone = userZone;
+    } else if (locationIdOrZone) {
+      if (matchesZone(locationIdOrZone, 'Jaisalmer')) targetZone = 'Jaisalmer';
+      else if (matchesZone(locationIdOrZone, 'Ahmedabad')) targetZone = 'Ahmedabad';
+      else if (matchesZone(locationIdOrZone, 'Kutch')) targetZone = 'Kutch';
+      else targetZone = 'Srinagar';
+    }
+
+    return ZONE_FORECASTS_7DAYS[targetZone] || this.forecastDays;
   }
 
   /**
