@@ -270,7 +270,7 @@ export const Header: React.FC<HeaderProps> = ({
                   onClick={() => setProfileOpen(!profileOpen)}
                   aria-expanded={profileOpen}
                   title="Command Designation & Options"
-                  className="h-8.5 inline-flex items-center gap-2 px-3 rounded-xs bg-[#F0F4EE] hover:bg-[#E8EEE5] border border-[#D8DFD5] font-mono text-xs text-[#1F2933] transition-colors cursor-pointer shadow-xs focus:outline-hidden focus:ring-2 focus:ring-yellow-500 whitespace-nowrap"
+                  className="h-9 inline-flex items-center gap-2 px-3 rounded-xs bg-[#F0F4EE] hover:bg-[#E8EEE5] border border-[#D8DFD5] font-mono text-xs text-[#1F2933] transition-colors cursor-pointer shadow-xs focus:outline-hidden focus:ring-2 focus:ring-yellow-500 whitespace-nowrap"
                 >
                   <div className="w-5 h-5 rounded-full bg-[#355E3B] text-white flex items-center justify-center font-bold text-[10px] border border-[#1F3D27] shrink-0">
                     {user?.role === 'MAIN_HEAD' ? '★' : '⚑'}
