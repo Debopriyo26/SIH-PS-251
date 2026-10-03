@@ -19,6 +19,39 @@ import { HelpPage } from './pages/HelpPage';
 import { LocationNode } from './types';
 import { resolveLocationId } from './lib/zones';
 
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: string }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: '' };
+  }
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error: error?.message || 'Application error.' };
+  }
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error('VYOMIX ErrorBoundary caught error:', error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-8 max-w-xl mx-auto my-12 bg-white border border-[#FDA29B] rounded-xs font-mono text-xs space-y-4 shadow-sm">
+          <div className="font-tactical text-base font-bold text-[#B42318] uppercase tracking-wider">Tactical View Notice</div>
+          <p className="text-[#52606D]">{this.state.error}</p>
+          <button
+            onClick={() => {
+              this.setState({ hasError: false });
+              window.location.reload();
+            }}
+            className="px-4 py-2 bg-[#355E3B] text-white rounded-xs font-bold uppercase tracking-wider cursor-pointer"
+          >
+            Reload Command View
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function MainAppContent() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const [currentTab, setCurrentTab] = useState<NavTab>('landing');
@@ -162,7 +195,9 @@ function MainAppContent() {
 
       {/* Main Page Canvas */}
       <main className={`flex-1 ${currentTab === 'landing' || currentTab === 'login' || currentTab === 'signup' || currentTab === 'forgot-password' ? '' : 'p-4 md:p-6 max-w-7xl mx-auto w-full'}`}>
-        {renderPage()}
+        <ErrorBoundary>
+          {renderPage()}
+        </ErrorBoundary>
       </main>
 
       {/* AI Assistant Modal */}

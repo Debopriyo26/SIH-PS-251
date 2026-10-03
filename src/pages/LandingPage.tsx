@@ -3,11 +3,14 @@ import { Shield, ArrowRight, Boxes, TrendingUp, CloudSun } from 'lucide-react';
 import { Logo } from '../components/common/Logo';
 import { NavTab } from '../components/layout/Header';
 
+import { useAuth } from '../lib/authContext';
+
 interface LandingPageProps {
   onNavigate: (tab: NavTab) => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
+  const { login } = useAuth();
   return (
     <div className="relative min-h-[calc(100vh-65px)] flex flex-col justify-between bg-[#F7F8F4]">
       {/* Background subtle tactical grid */}
@@ -57,6 +60,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             className="px-8 py-3.5 bg-white hover:bg-[#F0F4EE] text-[#1F2933] border border-[#355E3B] hover:border-[#1F3D27] rounded-xs font-tactical font-bold text-xs tracking-wider uppercase transition-colors cursor-pointer shadow-xs"
           >
             <span>CREATE ACCOUNT</span>
+          </button>
+
+          <button
+            onClick={async () => {
+              await login('main.head@vyomix.gov.in', 'Password@123!');
+              onNavigate('dashboard');
+            }}
+            className="px-6 py-3.5 bg-[#E8EEE5] hover:bg-[#D8DFD5] text-[#355E3B] border border-[#CAD3C8] rounded-xs font-tactical font-bold text-xs tracking-wider uppercase transition-colors cursor-pointer shadow-xs flex items-center gap-2"
+          >
+            <span>★ QUICK DEMO ACCESS</span>
           </button>
         </div>
 

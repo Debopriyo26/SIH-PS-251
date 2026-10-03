@@ -136,25 +136,35 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <button
               type="button"
-              onClick={() => {
+              onClick={async () => {
                 setEmail('main.head@vyomix.gov.in');
                 setPassword('Password@123!');
+                await login('main.head@vyomix.gov.in', 'Password@123!');
+                onNavigate('dashboard');
               }}
-              className="text-left p-2 bg-white hover:bg-[#E8EEE5] border border-[#CAD3C8] rounded-xs transition-colors cursor-pointer"
+              className="text-left p-2.5 bg-white hover:bg-[#E8EEE5] border border-[#CAD3C8] rounded-xs transition-colors cursor-pointer group"
             >
-              <div className="font-bold text-[#355E3B]">★ MAIN HEAD</div>
+              <div className="font-bold text-[#355E3B] flex items-center justify-between">
+                <span>★ MAIN HEAD (1-Click Login)</span>
+                <ArrowRight className="w-3.5 h-3.5 text-[#355E3B]" />
+              </div>
               <div className="text-[10px] text-[#52606D] truncate">main.head@vyomix.gov.in</div>
             </button>
 
             <button
               type="button"
-              onClick={() => {
+              onClick={async () => {
                 setEmail('srinagar.head@vyomix.gov.in');
                 setPassword('Password@123!');
+                await login('srinagar.head@vyomix.gov.in', 'Password@123!');
+                onNavigate('dashboard');
               }}
-              className="text-left p-2 bg-white hover:bg-[#E8EEE5] border border-[#CAD3C8] rounded-xs transition-colors cursor-pointer"
+              className="text-left p-2.5 bg-white hover:bg-[#E8EEE5] border border-[#CAD3C8] rounded-xs transition-colors cursor-pointer group"
             >
-              <div className="font-bold text-[#6B7444]">⚑ ZONAL HEAD (Srinagar)</div>
+              <div className="font-bold text-[#6B7444] flex items-center justify-between">
+                <span>⚑ ZONAL HEAD (1-Click Login)</span>
+                <ArrowRight className="w-3.5 h-3.5 text-[#6B7444]" />
+              </div>
               <div className="text-[10px] text-[#52606D] truncate">srinagar.head@vyomix.gov.in</div>
             </button>
           </div>
