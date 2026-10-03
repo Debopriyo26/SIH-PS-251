@@ -263,26 +263,21 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
               </div>
 
-              {/* The Single Last Button: User's Name with Dropdown Menu (Sound + My Requests + Help + Sign Out) */}
+              {/* The Single Last Button: Designation Button with Dropdown Menu (showing user name inside) */}
               <div className="relative min-w-0" ref={profileRef}>
                 <button
                   type="button"
                   onClick={() => setProfileOpen(!profileOpen)}
                   aria-expanded={profileOpen}
-                  title="User Command Profile & Options"
-                  className="h-9 inline-flex items-center gap-2 px-2.5 sm:px-3 rounded-xs bg-[#F0F4EE] hover:bg-[#E8EEE5] border border-[#D8DFD5] font-mono text-xs text-[#1F2933] transition-colors cursor-pointer shadow-xs min-w-0 max-w-[170px] sm:max-w-[240px] focus:outline-hidden focus:ring-2 focus:ring-yellow-500 overflow-hidden"
+                  title="Command Designation & Options"
+                  className="h-8.5 inline-flex items-center gap-2 px-3 rounded-xs bg-[#F0F4EE] hover:bg-[#E8EEE5] border border-[#D8DFD5] font-mono text-xs text-[#1F2933] transition-colors cursor-pointer shadow-xs focus:outline-hidden focus:ring-2 focus:ring-yellow-500 whitespace-nowrap"
                 >
                   <div className="w-5 h-5 rounded-full bg-[#355E3B] text-white flex items-center justify-center font-bold text-[10px] border border-[#1F3D27] shrink-0">
-                    {user?.fullName?.charAt(0) || 'U'}
+                    {user?.role === 'MAIN_HEAD' ? '★' : '⚑'}
                   </div>
-                  <div className="flex flex-col text-left justify-center min-w-0 flex-1 overflow-hidden">
-                    <span className="block font-bold text-xs text-[#1F2933] leading-tight truncate whitespace-nowrap">
-                      {(user?.fullName || 'Officer').replace(/\s*\([^)]*\)/g, '').trim()}
-                    </span>
-                    <span className="block text-[9px] font-bold uppercase tracking-wider text-[#355E3B] leading-none whitespace-nowrap truncate">
-                      {user?.role === 'MAIN_HEAD' ? '★ MAIN HEAD' : `⚑ ${user?.zone || 'ZONAL'} HEAD`}
-                    </span>
-                  </div>
+                  <span className="font-bold text-xs text-[#1F2933] uppercase tracking-wider whitespace-nowrap">
+                    {user?.role === 'MAIN_HEAD' ? 'Main Head' : 'Zonal Head'}
+                  </span>
                   <ChevronDown className={`w-3.5 h-3.5 text-[#52606D] shrink-0 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
                 </button>
 
@@ -290,8 +285,11 @@ export const Header: React.FC<HeaderProps> = ({
                 {profileOpen && (
                   <div className="absolute right-0 mt-2 w-72 bg-white border border-[#D8DFD5] rounded-xs shadow-2xl py-1.5 z-50 font-mono text-xs">
                     {/* User Info Header */}
-                    <div className="px-3.5 py-2.5 border-b border-[#F0F4EE] bg-[#F9FAF8]">
-                      <div className="font-bold text-sm text-[#1F2933] truncate">
+                    <div className="px-3.5 py-3 border-b border-[#F0F4EE] bg-[#F9FAF8]">
+                      <div className="text-[10px] text-[#52606D] uppercase font-bold tracking-wider">
+                        Commanding Officer
+                      </div>
+                      <div className="font-bold text-sm text-[#1F2933] truncate mt-0.5">
                         {user?.fullName || 'Logistics Officer'}
                       </div>
                       <div className="text-[10px] text-[#52606D] truncate mt-0.5">
@@ -299,8 +297,8 @@ export const Header: React.FC<HeaderProps> = ({
                       </div>
                       <div className="text-[10px] font-bold mt-1.5 flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full bg-[#355E3B]"></span>
-                        <span className="text-[#355E3B]">
-                          {user?.role === 'MAIN_HEAD' ? 'Main Logistics Command Head' : `Zonal Logistics Head — ${user?.zone}`}
+                        <span className="text-[#355E3B] uppercase tracking-wider font-bold">
+                          {user?.role === 'MAIN_HEAD' ? '★ Main Head (Central Command)' : `⚑ Zonal Head (${user?.zone || 'Regional'})`}
                         </span>
                       </div>
                     </div>

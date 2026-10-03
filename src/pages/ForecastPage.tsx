@@ -479,14 +479,14 @@ export const ForecastPage: React.FC = () => {
           <table className="w-full text-left font-mono text-xs">
             <thead>
               <tr className="bg-[#F0F4EE] border-b border-[#D8DFD5] text-[#52606D] uppercase tracking-wider text-[11px]">
-                <th className="py-2.5 px-3 font-bold">Supply Item</th>
-                <th className="py-2.5 px-3 font-bold">Forecast Demand</th>
-                <th className="py-2.5 px-3 font-bold">Available Buffer</th>
-                <th className="py-2.5 px-3 font-bold">Safety Stock</th>
-                <th className="py-2.5 px-3 font-bold">Shortfall</th>
-                <th className="py-2.5 px-3 font-bold">Priority</th>
-                <th className="py-2.5 px-3 font-bold">AI Decision</th>
-                <th className="py-2.5 px-3 font-bold text-right">Action</th>
+                <th className="py-2.5 px-3 font-bold whitespace-nowrap">Supply Item</th>
+                <th className="py-2.5 px-3 font-bold whitespace-nowrap">Forecast Demand</th>
+                <th className="py-2.5 px-3 font-bold whitespace-nowrap">Available Buffer</th>
+                <th className="py-2.5 px-3 font-bold whitespace-nowrap">Safety Stock</th>
+                <th className="py-2.5 px-3 font-bold whitespace-nowrap">Shortfall</th>
+                <th className="py-2.5 px-3 font-bold whitespace-nowrap">Priority</th>
+                <th className="py-2.5 px-3 font-bold whitespace-nowrap">AI Decision</th>
+                <th className="py-2.5 px-3 font-bold text-right whitespace-nowrap">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#F0F4EE]">
@@ -497,26 +497,26 @@ export const ForecastPage: React.FC = () => {
 
                   return (
                     <tr key={req.id} className="hover:bg-[#F9FAF8] transition-colors">
-                      <td className="py-2.5 px-3 font-bold text-[#1F2933]">
+                      <td className="py-2.5 px-3 font-bold text-[#1F2933] whitespace-nowrap">
                         <div>{req.supply_name}</div>
                         <div className="text-[10px] text-[#52606D] font-medium">{req.supply_category}</div>
                       </td>
-                      <td className="py-2.5 px-3 font-semibold text-[#1F2933]">
+                      <td className="py-2.5 px-3 font-semibold text-[#1F2933] whitespace-nowrap">
                         {req.projected_demand.toLocaleString()} {req.unit}
                       </td>
-                      <td className="py-2.5 px-3 text-[#52606D]">
+                      <td className="py-2.5 px-3 text-[#52606D] whitespace-nowrap">
                         {req.projected_available.toLocaleString()} {req.unit}
                       </td>
-                      <td className="py-2.5 px-3 text-[#52606D]">
+                      <td className="py-2.5 px-3 text-[#52606D] whitespace-nowrap">
                         {req.safety_stock.toLocaleString()} {req.unit}
                       </td>
-                      <td className="py-2.5 px-3 font-bold">
+                      <td className="py-2.5 px-3 font-bold whitespace-nowrap">
                         <span className={req.projected_shortfall > 0 ? 'text-[#B42318]' : 'text-[#2F6B3C]'}>
                           {req.projected_shortfall > 0 ? `${req.projected_shortfall.toLocaleString()} ${req.unit}` : '0 (None)'}
                         </span>
                       </td>
-                      <td className="py-2.5 px-3">
-                        <span className={`px-2 py-0.5 rounded-xs text-[10px] font-bold uppercase border ${
+                      <td className="py-2.5 px-3 whitespace-nowrap">
+                        <span className={`px-2 py-0.5 rounded-xs text-[10px] font-bold uppercase border whitespace-nowrap inline-block ${
                           req.priority === 'CRITICAL' ? 'bg-[#FEE4E2] text-[#B42318] border-[#FDA29B]' :
                           req.priority === 'HIGH' ? 'bg-[#FFEDD5] text-[#C2410C] border-[#FDBA74]' :
                           req.priority === 'MEDIUM' ? 'bg-[#FEF08A] text-[#A16207] border-[#FDE047]' :
@@ -525,8 +525,8 @@ export const ForecastPage: React.FC = () => {
                           {req.priority}
                         </span>
                       </td>
-                      <td className="py-2.5 px-3 font-bold">
-                        <span className={`px-2 py-0.5 rounded-xs text-[10px] uppercase border ${
+                      <td className="py-2.5 px-3 font-bold whitespace-nowrap">
+                        <span className={`px-2 py-0.5 rounded-xs text-[10px] font-bold uppercase border whitespace-nowrap inline-block ${
                           req.decision === 'CRITICAL SHORTAGE' ? 'bg-[#FEE4E2] text-[#B42318] border-[#FDA29B]' :
                           req.decision === 'URGENT REPLENISH' ? 'bg-[#FFEDD5] text-[#C2410C] border-[#FDBA74]' :
                           req.decision === 'REPLENISH' ? 'bg-[#FEF08A] text-[#A16207] border-[#FDE047]' :

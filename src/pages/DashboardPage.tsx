@@ -458,13 +458,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <table className="w-full text-left text-xs font-mono">
                 <thead>
                   <tr className="bg-[#F0F4EE] border-b border-[#D8DFD5] text-[#52606D] text-[10px] uppercase">
-                    <th className="py-2 px-3">Supply Item</th>
-                    <th className="py-2 px-3">Forecast Demand</th>
-                    <th className="py-2 px-3">Available</th>
-                    <th className="py-2 px-3">Shortfall</th>
-                    <th className="py-2 px-3">Priority</th>
-                    <th className="py-2 px-3">AI Decision</th>
-                    <th className="py-2 px-3 text-right">Action</th>
+                    <th className="py-2 px-3 whitespace-nowrap">Supply Item</th>
+                    <th className="py-2 px-3 whitespace-nowrap">Forecast Demand</th>
+                    <th className="py-2 px-3 whitespace-nowrap">Available</th>
+                    <th className="py-2 px-3 whitespace-nowrap">Shortfall</th>
+                    <th className="py-2 px-3 whitespace-nowrap">Priority</th>
+                    <th className="py-2 px-3 whitespace-nowrap">AI Decision</th>
+                    <th className="py-2 px-3 text-right whitespace-nowrap">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#F0F4EE]">
@@ -473,22 +473,22 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                       const needsReplenish = req.decision !== 'SUFFICIENT';
                       return (
                         <tr key={req.id} className="hover:bg-[#F9FAF8]">
-                          <td className="py-2 px-3 font-bold text-[#1F2933]">
+                          <td className="py-2 px-3 font-bold text-[#1F2933] whitespace-nowrap">
                             {req.supply_name}
                           </td>
-                          <td className="py-2 px-3 text-[#1F2933]">
+                          <td className="py-2 px-3 text-[#1F2933] whitespace-nowrap">
                             {req.projected_demand.toLocaleString()} {req.unit}
                           </td>
-                          <td className="py-2 px-3 text-[#52606D]">
+                          <td className="py-2 px-3 text-[#52606D] whitespace-nowrap">
                             {req.projected_available.toLocaleString()} {req.unit}
                           </td>
-                          <td className="py-2 px-3 font-bold">
+                          <td className="py-2 px-3 font-bold whitespace-nowrap">
                             <span className={req.projected_shortfall > 0 ? 'text-[#B42318]' : 'text-[#2F6B3C]'}>
                               {req.projected_shortfall > 0 ? `${req.projected_shortfall.toLocaleString()} ${req.unit}` : '0 (None)'}
                             </span>
                           </td>
-                          <td className="py-2 px-3">
-                            <span className={`px-1.5 py-0.2 rounded-xs text-[9px] font-bold uppercase border ${
+                          <td className="py-2 px-3 whitespace-nowrap">
+                            <span className={`px-2 py-0.5 rounded-xs text-[10px] font-bold uppercase border whitespace-nowrap inline-block ${
                               req.priority === 'CRITICAL' ? 'bg-[#FEE4E2] text-[#B42318] border-[#FDA29B]' :
                               req.priority === 'HIGH' ? 'bg-[#FFEDD5] text-[#C2410C] border-[#FDBA74]' :
                               req.priority === 'MEDIUM' ? 'bg-[#FEF08A] text-[#A16207] border-[#FDE047]' :
@@ -497,8 +497,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                               {req.priority}
                             </span>
                           </td>
-                          <td className="py-2 px-3">
-                            <span className={`px-1.5 py-0.2 rounded-xs text-[9px] font-bold uppercase border ${
+                          <td className="py-2 px-3 whitespace-nowrap">
+                            <span className={`px-2 py-0.5 rounded-xs text-[10px] font-bold uppercase border whitespace-nowrap inline-block ${
                               req.decision === 'CRITICAL SHORTAGE' ? 'bg-[#FEE4E2] text-[#B42318] border-[#FDA29B]' :
                               req.decision === 'URGENT REPLENISH' ? 'bg-[#FFEDD5] text-[#C2410C] border-[#FDBA74]' :
                               req.decision === 'REPLENISH' ? 'bg-[#FEF08A] text-[#A16207] border-[#FDE047]' :

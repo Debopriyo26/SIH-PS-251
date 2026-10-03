@@ -44,7 +44,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 font-mono font-semibold tracking-wider uppercase rounded-xs border ${bg} ${text} ${border} ${sizeClasses}`}
+      className={`inline-flex items-center gap-1.5 font-mono font-semibold tracking-wider uppercase rounded-xs border whitespace-nowrap shrink-0 ${bg} ${text} ${border} ${sizeClasses}`}
     >
       <span className={`w-1.5 h-1.5 rounded-full ${dot} ${pulse ? 'animate-ping' : ''}`} />
       <span>{status}</span>
