@@ -9,6 +9,7 @@ import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { CommunicationPage } from './pages/CommunicationPage';
 import { LocationsPage } from './pages/LocationsPage';
 import { SuppliesPage } from './pages/SuppliesPage';
 import { ForecastPage } from './pages/ForecastPage';
@@ -16,28 +17,47 @@ import { SimulatorPage } from './pages/SimulatorPage';
 import { AlertsPage } from './pages/AlertsPage';
 import { HelpPage } from './pages/HelpPage';
 import { LocationNode } from './types';
+import { resolveLocationId } from './lib/zones';
 
 function MainAppContent() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const [currentTab, setCurrentTab] = useState<NavTab>('landing');
   const [selectedLocationId, setSelectedLocationId] = useState<string>('ALL');
   const [selectedLocationForDetail, setSelectedLocationForDetail] = useState<LocationNode | null>(null);
   const [isAssistOpen, setIsAssistOpen] = useState(false);
 
-  // Auto-switch to dashboard upon successful authentication if on public auth pages
+  // Auto-switch to dashboard upon successful authentication, or enforce landing page if unauthenticated (Requirement 1 & 12)
   useEffect(() => {
     if (isAuthenticated && (currentTab === 'landing' || currentTab === 'login' || currentTab === 'signup' || currentTab === 'forgot-password')) {
       setCurrentTab('dashboard');
+    } else if (!isAuthenticated && currentTab !== 'landing' && currentTab !== 'login' && currentTab !== 'signup' && currentTab !== 'forgot-password') {
+      setCurrentTab('landing');
     }
   }, [isAuthenticated, currentTab]);
+
+  // Strict Zone Isolation: Lock location to Zonal Head's assigned zone
+  useEffect(() => {
+    if (isAuthenticated && user?.role === 'ZONAL_HEAD' && user?.zone) {
+      setSelectedLocationId(resolveLocationId(user.zone));
+    }
+  }, [isAuthenticated, user?.role, user?.zone]);
+
+  const handleLocationChange = (locId: string) => {
+    if (user?.role === 'ZONAL_HEAD' && user?.zone) {
+      // Zonal Head can NEVER switch to any other zone
+      setSelectedLocationId(resolveLocationId(user.zone));
+    } else {
+      setSelectedLocationId(locId);
+    }
+  };
 
   // If loading session, show subtle loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#07100B] text-[#E7E9E2] flex items-center justify-center font-mono text-xs">
+      <div className="min-h-screen bg-[#F7F8F4] text-[#1F2933] flex items-center justify-center font-mono text-xs">
         <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#B5A47A] animate-ping" />
-          <span>INITIALIZING VYOMIX PLATFORM...</span>
+          <span className="w-2.5 h-2.5 rounded-full bg-[#355E3B] animate-ping" />
+          <span className="font-bold tracking-wider">INITIALIZING VYOMIX PLATFORM...</span>
         </div>
       </div>
     );
@@ -60,10 +80,15 @@ function MainAppContent() {
           <DashboardPage
             onNavigate={setCurrentTab}
             selectedLocationId={selectedLocationId}
-            onLocationChange={setSelectedLocationId}
+            onLocationChange={handleLocationChange}
             onSelectLocationForDetail={(loc) => {
-              setSelectedLocationForDetail(loc);
-              setSelectedLocationId(loc.id);
+              if (user?.role === 'ZONAL_HEAD' && user?.zone) {
+                setSelectedLocationForDetail(loc);
+                setSelectedLocationId(resolveLocationId(user.zone));
+              } else {
+                setSelectedLocationForDetail(loc);
+                setSelectedLocationId(loc.id);
+              }
             }}
           />
         );
@@ -72,10 +97,15 @@ function MainAppContent() {
           <LocationsPage
             onNavigate={setCurrentTab}
             selectedLocationId={selectedLocationId}
-            onLocationChange={setSelectedLocationId}
+            onLocationChange={handleLocationChange}
             onSelectLocationForDetail={(loc) => {
-              setSelectedLocationForDetail(loc);
-              setSelectedLocationId(loc.id);
+              if (user?.role === 'ZONAL_HEAD' && user?.zone) {
+                setSelectedLocationForDetail(loc);
+                setSelectedLocationId(resolveLocationId(user.zone));
+              } else {
+                setSelectedLocationForDetail(loc);
+                setSelectedLocationId(loc.id);
+              }
             }}
           />
         );
@@ -83,7 +113,7 @@ function MainAppContent() {
         return (
           <SuppliesPage
             selectedLocationId={selectedLocationId}
-            onLocationChange={setSelectedLocationId}
+            onLocationChange={handleLocationChange}
           />
         );
       case 'forecast':
@@ -92,6 +122,8 @@ function MainAppContent() {
         return <SimulatorPage />;
       case 'alerts':
         return <AlertsPage selectedLocationId={selectedLocationId} />;
+      case 'communication':
+        return <CommunicationPage />;
       case 'help':
         return <HelpPage />;
       default:
@@ -99,10 +131,15 @@ function MainAppContent() {
           <DashboardPage
             onNavigate={setCurrentTab}
             selectedLocationId={selectedLocationId}
-            onLocationChange={setSelectedLocationId}
+            onLocationChange={handleLocationChange}
             onSelectLocationForDetail={(loc) => {
-              setSelectedLocationForDetail(loc);
-              setSelectedLocationId(loc.id);
+              if (user?.role === 'ZONAL_HEAD' && user?.zone) {
+                setSelectedLocationForDetail(loc);
+                setSelectedLocationId(resolveLocationId(user.zone));
+              } else {
+                setSelectedLocationForDetail(loc);
+                setSelectedLocationId(loc.id);
+              }
             }}
           />
         );
@@ -110,7 +147,7 @@ function MainAppContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#07100B] text-[#E7E9E2] flex flex-col font-sans">
+    <div className="min-h-screen bg-[#F7F8F4] text-[#1F2933] flex flex-col font-sans">
       {/* Tactical Header with Simplified 6-item Nav, Profile Dropdown, and Help */}
       <Header
         currentTab={currentTab}

@@ -8,25 +8,30 @@ export default {
     extend: {
       colors: {
         vyomix: {
-          bg: '#07100B',
-          panel: '#101B13',
-          panelBorder: '#1A2C1E',
-          panelMuted: '#0C160F',
-          military: '#263F2B',
-          militaryLight: '#325338',
-          olive: '#596B3A',
-          oliveLight: '#72884A',
-          khaki: '#B5A47A',
-          khakiLight: '#D6C8A4',
-          text: '#E7E9E2',
-          textMuted: '#8B9B8E',
-          warning: '#D39B32',
-          warningBg: 'rgba(211, 155, 50, 0.12)',
-          critical: '#C43C3C',
-          criticalBg: 'rgba(196, 60, 60, 0.15)',
-          success: '#3FA34D',
-          successBg: 'rgba(63, 163, 77, 0.12)',
-          cyan: '#3E92CC',
+          bg: '#F7F8F4',
+          card: '#FFFFFF',
+          cardBorder: '#D8DFD5',
+          borderMuted: '#E2E8DF',
+          primary: '#355E3B',       // Deep Army Green
+          primaryDark: '#1F3D27',   // Dark Army Green
+          olive: '#6B7444',         // Olive Green
+          khaki: '#B5A36A',         // Muted Khaki
+          sage: '#E8EEE5',          // Light Sage
+          sageMuted: '#F0F4EE',
+          text: '#1F2933',          // Dark Charcoal text
+          textMuted: '#52606D',     // Slate/Sage Muted
+          critical: '#B42318',      // Critical Red
+          criticalBg: '#FEE4E2',
+          criticalBorder: '#FDA29B',
+          high: '#C2410C',          // High Orange
+          highBg: '#FFEDD5',
+          highBorder: '#FDBA74',
+          medium: '#A16207',        // Medium Amber
+          mediumBg: '#FEF08A',
+          mediumBorder: '#FDE047',
+          success: '#2F6B3C',       // Army Success Green
+          successBg: '#E8F5E9',
+          successBorder: '#A5D6A7',
         }
       },
       fontFamily: {

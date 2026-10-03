@@ -3,13 +3,13 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
   margin: 0;
-  background-color: #07100B;
-  color: #E7E9E2;
+  background-color: #F7F8F4;
+  color: #1F2933;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overflow-x: hidden;
 }
@@ -30,36 +30,44 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #07100B;
+  background: #F0F4EE;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #263F2B;
-  border-radius: 2px;
+  background: #B5A36A;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #596B3A;
+  background: #6B7444;
 }
 
-/* Tactical Grid Background */
+/* Subtle Tactical Grid & Contours (Faint, readable) */
 .bg-tactical-grid {
   background-size: 32px 32px;
   background-image: 
-    linear-gradient(to right, rgba(38, 63, 43, 0.12) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(38, 63, 43, 0.12) 1px, transparent 1px);
+    linear-gradient(to right, rgba(53, 94, 59, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(53, 94, 59, 0.05) 1px, transparent 1px);
 }
 
 .bg-tactical-dots {
-  background-image: radial-gradient(rgba(89, 107, 58, 0.25) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(107, 116, 68, 0.12) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
-/* Tactical Corner Framing */
+/* Light Card & Subtle Framing */
+.army-card {
+  background-color: #FFFFFF;
+  border: 1px solid #D8DFD5;
+  box-shadow: 0 1px 3px rgba(31, 41, 51, 0.05), 0 1px 2px rgba(31, 41, 51, 0.03);
+  border-radius: 4px;
+}
+
 .tactical-border {
   position: relative;
-  background-color: #101B13;
-  border: 1px solid rgba(89, 107, 58, 0.25);
+  background-color: #FFFFFF;
+  border: 1px solid #D8DFD5;
+  box-shadow: 0 1px 3px rgba(31, 41, 51, 0.05);
 }
 
 .tactical-border::before,
@@ -74,38 +82,48 @@ body {
 .tactical-border::before {
   top: -1px;
   left: -1px;
-  border-top: 2px solid #B5A47A;
-  border-left: 2px solid #B5A47A;
+  border-top: 2px solid #355E3B;
+  border-left: 2px solid #355E3B;
 }
 
 .tactical-border::after {
   bottom: -1px;
   right: -1px;
-  border-bottom: 2px solid #B5A47A;
-  border-right: 2px solid #B5A47A;
+  border-bottom: 2px solid #B5A36A;
+  border-right: 2px solid #B5A36A;
 }
 
-/* Glowing Tactical Indicators */
+/* Soft Army Status Glows */
 .tactical-glow-green {
-  box-shadow: 0 0 12px rgba(63, 163, 77, 0.25);
+  box-shadow: 0 0 10px rgba(47, 107, 60, 0.15);
 }
 
 .tactical-glow-amber {
-  box-shadow: 0 0 12px rgba(211, 155, 50, 0.25);
+  box-shadow: 0 0 10px rgba(161, 98, 7, 0.15);
 }
 
 .tactical-glow-red {
-  box-shadow: 0 0 12px rgba(196, 60, 60, 0.35);
+  box-shadow: 0 0 10px rgba(180, 35, 24, 0.2);
 }
 
-/* Leaflet Dark Filter for Tactical Cartography */
+/* Leaflet Container for Light Indian Army Cartography */
 .leaflet-container {
-  background-color: #080D09 !important;
+  background-color: #E8EEE5 !important;
   font-family: inherit;
+  z-index: 1;
 }
 
-.tactical-tiles {
-  filter: brightness(0.68) invert(1) contrast(3.2) hue-rotate(200deg) saturate(0.25) brightness(0.65);
+/* Map Popups in Light Theme */
+.leaflet-popup-content-wrapper {
+  background: #FFFFFF !important;
+  color: #1F2933 !important;
+  border: 1px solid #D8DFD5 !important;
+  box-shadow: 0 4px 12px rgba(31, 41, 51, 0.12) !important;
+  border-radius: 4px !important;
+}
+
+.leaflet-popup-tip {
+  background: #FFFFFF !important;
 }
 
 /* Radar Sweep Animation */
@@ -121,3 +139,4 @@ body {
 .animate-radar-sweep {
   animation: radar-sweep 6s linear infinite;
 }
+

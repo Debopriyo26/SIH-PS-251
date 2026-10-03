@@ -1,11 +1,62 @@
-import { InventoryRecord, RiskLevel, LocationNode, SupplyItem } from '../types';
+import { InventoryRecord, RiskLevel, LocationNode, SupplyItem, LogisticsZone } from '../types';
 import { DEMO_INVENTORY, DEMO_LOCATIONS, DEMO_SUPPLIES } from './demoData';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { alertService } from './alertService';
+import { resolveLocationId, getLocationZoneName, matchesZone, getLocationNodeForZone, ZONES_CONFIG } from '../lib/zones';
+
+const STORAGE_INVENTORY_KEY = 'vyomix_persisted_inventory';
 
 class InventoryService {
-  private localInventory: InventoryRecord[] = [...DEMO_INVENTORY];
+  private localInventory: InventoryRecord[] = [];
 
-  public async getInventory(locationId?: string): Promise<InventoryRecord[]> {
+  constructor() {
+    this.loadInitialInventory();
+  }
+
+  private loadInitialInventory() {
+    try {
+      const stored = localStorage.getItem(STORAGE_INVENTORY_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          this.localInventory = parsed;
+          return;
+        }
+      }
+    } catch (e) {}
+
+    this.localInventory = [...DEMO_INVENTORY];
+  }
+
+  private persistLocal() {
+    try {
+      localStorage.setItem(STORAGE_INVENTORY_KEY, JSON.stringify(this.localInventory));
+    } catch (e) {}
+  }
+
+  /**
+   * Retrieves inventory records with STRICT ZONE ISOLATION (Requirements 6 & 8).
+   * If user is ZONAL_HEAD, access is unconditionally constrained to their assigned zone.
+   */
+  public async getInventory(
+    locationId?: string, 
+    userRole?: string, 
+    userZone?: LogisticsZone | null
+  ): Promise<InventoryRecord[]> {
+    // 1. Strict Zone Isolation Enforcement:
+    // If Zonal Head, override requested locationId to only user's assigned zone
+    let targetZone: LogisticsZone | null = null;
+    let targetLocId = locationId;
+
+    if (userRole === 'ZONAL_HEAD' && userZone) {
+      targetZone = userZone;
+      targetLocId = resolveLocationId(userZone);
+    } else if (locationId && locationId !== 'ALL') {
+      targetZone = getLocationZoneName(locationId);
+      targetLocId = resolveLocationId(locationId);
+    }
+
+    // 2. Fetch from Supabase if configured
     if (isSupabaseConfigured && supabase) {
       try {
         let query = supabase
@@ -16,40 +67,79 @@ class InventoryService {
             locations (*)
           `);
         
-        if (locationId && locationId !== 'ALL') {
-          query = query.eq('location_id', locationId);
+        if (targetLocId && targetLocId !== 'ALL') {
+          query = query.eq('location_id', targetLocId);
         }
 
         const { data, error } = await query;
-        if (!error && data && data.length > 0) {
-          return data.map((item: any) => ({
+        if (error) {
+          console.error('Supabase inventory fetch error:', {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+          });
+        } else if (data && data.length > 0) {
+          const mapped: InventoryRecord[] = data.map((item: any) => ({
             id: item.id,
             location_id: item.location_id,
             supply_id: item.supply_id,
-            current_stock: Number(item.current_stock),
-            daily_consumption: Number(item.daily_consumption),
-            safety_threshold: Number(item.safety_threshold),
-            reorder_point: Number(item.reorder_point),
-            forecast_demand_7d: Number(item.forecast_demand_7d || 0),
-            days_of_cover: Number(item.days_of_cover || (item.daily_consumption > 0 ? item.current_stock / item.daily_consumption : 0)),
+            current_stock: Math.max(0, Number(item.current_stock)),
+            daily_consumption: Math.max(1, Number(item.daily_consumption)),
+            safety_threshold: Math.max(0, Number(item.safety_threshold)),
+            reorder_point: Math.max(0, Number(item.reorder_point)),
+            forecast_demand_7d: Math.max(0, Number(item.forecast_demand_7d || 0)),
+            days_of_cover: Number(item.days_of_cover || (item.daily_consumption > 0 ? (item.current_stock / item.daily_consumption).toFixed(1) : 0)),
             risk_status: item.risk_status as RiskLevel,
             last_restocked_at: item.last_restocked_at,
             supply: item.supplies,
             location: item.locations
           }));
+
+          // Merge into local cache
+          mapped.forEach(m => {
+            const idx = this.localInventory.findIndex(i => i.id === m.id);
+            if (idx !== -1) {
+              this.localInventory[idx] = m;
+            } else {
+              this.localInventory.push(m);
+            }
+          });
+          this.persistLocal();
+
+          if (targetZone) {
+            return mapped.filter(item => 
+              matchesZone(item.location_id, targetZone) || 
+              matchesZone(item.location?.name, targetZone)
+            );
+          }
+          return mapped;
         }
       } catch (err) {
-        console.warn('Supabase fetch failed, falling back to demonstration inventory:', err);
+        console.warn('Supabase inventory query failed, utilizing synchronized local cache:', err);
       }
     }
 
-    if (locationId && locationId !== 'ALL') {
-      return this.localInventory.filter(item => item.location_id === locationId);
+    // 3. Fallback to Local Synchronized Inventory with strict zone isolation
+    if (targetZone) {
+      return this.localInventory.filter(item => 
+        matchesZone(item.location_id, targetZone) || 
+        matchesZone(item.location?.name, targetZone)
+      );
     }
+
     return this.localInventory;
   }
 
-  public async getLocations(): Promise<LocationNode[]> {
+  /**
+   * Retrieves locations with strict zone isolation for Zonal Heads (Requirement 6)
+   */
+  public async getLocations(userRole?: string, userZone?: LogisticsZone | null): Promise<LocationNode[]> {
+    if (userRole === 'ZONAL_HEAD' && userZone) {
+      // Zonal Head must ONLY see their assigned zone
+      return [getLocationNodeForZone(userZone)];
+    }
+
     if (isSupabaseConfigured && supabase) {
       try {
         const { data, error } = await supabase.from('locations').select('*');
@@ -77,44 +167,180 @@ class InventoryService {
     return DEMO_SUPPLIES;
   }
 
-  public async updateStock(recordId: string, newStock: number): Promise<InventoryRecord | null> {
-    const itemIndex = this.localInventory.findIndex(inv => inv.id === recordId);
-    if (itemIndex !== -1) {
-      const item = this.localInventory[itemIndex];
-      const daysOfCover = item.daily_consumption > 0 ? Number((newStock / item.daily_consumption).toFixed(1)) : 999;
-      let riskStatus: RiskLevel = 'LOW';
-      if (newStock < item.safety_threshold * 0.75) {
-        riskStatus = 'CRITICAL';
-      } else if (newStock <= item.safety_threshold) {
-        riskStatus = 'HIGH';
-      } else if (newStock <= item.reorder_point) {
-        riskStatus = 'MODERATE';
+  /**
+   * Stock adjustment mutation with strict validation, persistence, and audit logging (Requirements 22, 23, 40)
+   */
+  public async updateStock(
+    recordId: string, 
+    newStock: number, 
+    userRole?: string, 
+    userZone?: LogisticsZone | null
+  ): Promise<InventoryRecord> {
+    const safeStock = Math.max(0, Math.round(Number(newStock)));
+    let item = this.localInventory.find(inv => inv.id === recordId);
+
+    // If item not found in local cache, look up from Supabase
+    if (!item && isSupabaseConfigured && supabase) {
+      const { data: itemData, error: itemErr } = await supabase
+        .from('inventory')
+        .select('*, supplies(*), locations(*)')
+        .eq('id', recordId)
+        .single();
+
+      if (itemErr) {
+        console.error('Supabase inventory lookup error:', {
+          code: itemErr.code,
+          message: itemErr.message,
+          details: itemErr.details,
+          hint: itemErr.hint
+        });
+        throw new Error(`Inventory item not found: ${itemErr.message}`);
       }
 
-      const updated: InventoryRecord = {
-        ...item,
-        current_stock: newStock,
-        days_of_cover: daysOfCover,
-        risk_status: riskStatus,
-        last_restocked_at: new Date().toISOString()
+      if (itemData) {
+        item = {
+          id: itemData.id,
+          location_id: itemData.location_id,
+          supply_id: itemData.supply_id,
+          current_stock: Math.max(0, Number(itemData.current_stock)),
+          daily_consumption: Math.max(1, Number(itemData.daily_consumption)),
+          safety_threshold: Math.max(0, Number(itemData.safety_threshold)),
+          reorder_point: Math.max(0, Number(itemData.reorder_point)),
+          forecast_demand_7d: Math.max(0, Number(itemData.forecast_demand_7d || 0)),
+          days_of_cover: Number(itemData.days_of_cover || 0),
+          risk_status: itemData.risk_status as RiskLevel,
+          last_restocked_at: itemData.last_restocked_at,
+          supply: itemData.supplies,
+          location: itemData.locations
+        };
+      }
+    }
+
+    if (!item) {
+      throw new Error('Unable to find inventory record to update.');
+    }
+
+    // Strict Zone Isolation Security Check (Requirement 6 & 8)
+    if (userRole === 'ZONAL_HEAD' && userZone) {
+      const itemZone = getLocationZoneName(item.location_id || item.location?.name);
+      if (itemZone !== userZone) {
+        console.error(`Zone isolation breach rejected: User zone ${userZone} attempted to mutate item in ${itemZone}`);
+        throw new Error(`Security Violation: Zonal Head of ${userZone} cannot update supplies in ${itemZone}.`);
+      }
+    }
+
+    // Recalculate dependent values (Requirement 22 & 40)
+    const dailyConsumption = item.daily_consumption > 0 ? item.daily_consumption : 1;
+    const daysOfCover = Number((safeStock / dailyConsumption).toFixed(1));
+
+    let riskStatus: RiskLevel = 'LOW';
+    if (safeStock < item.safety_threshold * 0.75) {
+      riskStatus = 'CRITICAL';
+    } else if (safeStock <= item.safety_threshold) {
+      riskStatus = 'HIGH';
+    } else if (safeStock <= item.reorder_point) {
+      riskStatus = 'MODERATE';
+    }
+
+    const nowIso = new Date().toISOString();
+
+    // 1. Persist directly in Supabase
+    if (isSupabaseConfigured && supabase) {
+      const { data: updatedRows, error: updateError } = await supabase
+        .from('inventory')
+        .update({ 
+          current_stock: safeStock, 
+          risk_status: riskStatus,
+          last_restocked_at: nowIso,
+          updated_at: nowIso 
+        })
+        .eq('id', recordId)
+        .select('*, supplies(*), locations(*)');
+
+      if (updateError) {
+        console.error('Stock update failed in Supabase:', {
+          code: updateError.code,
+          message: updateError.message,
+          details: updateError.details,
+          hint: updateError.hint
+        });
+        throw new Error(updateError.message || 'Database stock update failed.');
+      }
+
+      if (!updatedRows || updatedRows.length === 0) {
+        console.error('Supabase inventory update returned 0 rows. Check user authentication / RLS permissions.');
+        throw new Error('Database permission denied or inventory record not found. Please ensure you are signed in.');
+      }
+
+      const dbRow = updatedRows[0];
+      const updatedRecord: InventoryRecord = {
+        id: dbRow.id,
+        location_id: dbRow.location_id,
+        supply_id: dbRow.supply_id,
+        current_stock: Number(dbRow.current_stock),
+        daily_consumption: Number(dbRow.daily_consumption),
+        safety_threshold: Number(dbRow.safety_threshold),
+        reorder_point: Number(dbRow.reorder_point),
+        forecast_demand_7d: Number(dbRow.forecast_demand_7d || 0),
+        days_of_cover: Number(dbRow.days_of_cover || daysOfCover),
+        risk_status: dbRow.risk_status as RiskLevel,
+        last_restocked_at: dbRow.last_restocked_at || nowIso,
+        supply: dbRow.supplies || item.supply,
+        location: dbRow.locations || item.location
       };
 
-      this.localInventory[itemIndex] = updated;
+      // Sync local cache
+      const idx = this.localInventory.findIndex(inv => inv.id === recordId);
+      if (idx !== -1) {
+        this.localInventory[idx] = updatedRecord;
+      } else {
+        this.localInventory.push(updatedRecord);
+      }
+      this.persistLocal();
 
-      if (isSupabaseConfigured && supabase) {
-        try {
-          await supabase
-            .from('inventory')
-            .update({ current_stock: newStock, risk_status: riskStatus, updated_at: new Date().toISOString() })
-            .eq('id', recordId);
-        } catch (err) {
-          console.error('Supabase update failed:', err);
-        }
+      // Trigger threshold violation alert if stock degraded below safety floor
+      if (safeStock <= updatedRecord.safety_threshold) {
+        await alertService.createStockAlert(
+          updatedRecord.location_id,
+          updatedRecord.location?.name || 'Logistics Zone',
+          updatedRecord.supply?.name || 'Supply Item',
+          updatedRecord.supply?.category,
+          safeStock,
+          updatedRecord.safety_threshold,
+          updatedRecord.days_of_cover
+        );
       }
 
-      return updated;
+      return updatedRecord;
     }
-    return null;
+
+    // 2. Local Fallback with local persistence
+    const localUpdated: InventoryRecord = {
+      ...item,
+      current_stock: safeStock,
+      days_of_cover: daysOfCover,
+      risk_status: riskStatus,
+      last_restocked_at: nowIso
+    };
+    const idx = this.localInventory.findIndex(inv => inv.id === recordId);
+    if (idx !== -1) {
+      this.localInventory[idx] = localUpdated;
+    }
+    this.persistLocal();
+
+    if (safeStock <= item.safety_threshold) {
+      await alertService.createStockAlert(
+        item.location_id,
+        item.location?.name || 'Logistics Zone',
+        item.supply?.name || 'Supply Item',
+        item.supply?.category,
+        safeStock,
+        item.safety_threshold,
+        daysOfCover
+      );
+    }
+
+    return localUpdated;
   }
 }
 

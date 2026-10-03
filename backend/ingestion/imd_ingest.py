@@ -9,6 +9,7 @@ Official Documentation Reference: https://mausam.imd.gov.in/imd_latest/contents/
 Includes resilient offline/rate-limit fallback caching.
 """
 
+# pyrefly: ignore [missing-import]
 import httpx
 import logging
 from typing import Dict, Any, List, Optional

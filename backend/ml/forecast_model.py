@@ -14,6 +14,7 @@ Outputs:
 - Supply Risk Level
 """
 
+# pyrefly: ignore [missing-import]
 import numpy as np
 import pandas as pd
 from typing import Dict, Any, List, Tuple
@@ -82,15 +83,17 @@ class DemandForecaster:
         lag_7d = daily_consumption * 1.02
 
         # 7 Historical points
+        safe_daily = max(1.0, float(daily_consumption))
         for i in range(7, 0, -1):
             past_date = today - timedelta(days=i)
-            hist_burn = round(daily_consumption + np.sin(i * 1.2) * 25 - 10)
+            # Proportional variance rather than arbitrary fixed additive offset
+            hist_burn = round(safe_daily * max(0.6, (1.0 + np.sin(i * 1.2) * 0.10)))
             points.append({
                 "date": past_date.strftime("%d %b"),
                 "historicalDemand": float(hist_burn),
                 "forecastDemand": float(hist_burn),
-                "upperConfidence": float(round(hist_burn * 1.1)),
-                "lowerConfidence": float(round(hist_burn * 0.9)),
+                "upperConfidence": float(round(hist_burn * 1.12)),
+                "lowerConfidence": float(max(1.0, round(hist_burn * 0.88))),
                 "rainfallMm": 1.2 if i > 2 else 12.0,
                 "riskLevel": "LOW"
             })
@@ -104,17 +107,18 @@ class DemandForecaster:
             temp = weather_temp_c
 
             features = np.array([[lag_1d, lag_7d, 250, temp, rain, transport_avail_pct / 100.0, dow]])
-            pred_demand = float(self.model.predict(features)[0])
+            raw_pred = float(self.model.predict(features)[0])
+            pred_demand = max(1.0, raw_pred)
             total_projected += pred_demand
 
             # Confidence interval calculated based on model residual variance (~12%)
-            upper = round(pred_demand * 1.12, 1)
-            lower = round(pred_demand * 0.88, 1)
+            upper = round(max(pred_demand, pred_demand * 1.12), 1)
+            lower = round(max(1.0, pred_demand * 0.88), 1)
 
             risk_pt = "LOW"
-            if pred_demand > daily_consumption * 1.2:
+            if pred_demand > safe_daily * 1.2:
                 risk_pt = "HIGH"
-            elif pred_demand > daily_consumption * 1.05:
+            elif pred_demand > safe_daily * 1.05:
                 risk_pt = "MODERATE"
 
             points.append({

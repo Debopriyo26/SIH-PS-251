@@ -21,12 +21,73 @@ export interface DataStatusInfo {
   message?: string;
 }
 
+export type UserRole = 'MAIN_HEAD' | 'ZONAL_HEAD';
+export type LogisticsZone = 'Srinagar' | 'Jaisalmer' | 'Ahmedabad' | 'Kutch';
+
 export interface User {
   id: string;
   email: string;
   fullName: string;
-  role: string;
+  role: UserRole | string;
+  zone?: LogisticsZone | null;
   avatarUrl?: string;
+}
+
+export type RequestType = 
+  | 'Supply Request'
+  | 'Logistics Alert'
+  | 'Emergency Requirement'
+  | 'Transport Requirement'
+  | 'Other';
+
+export type RequestPriority = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+
+export type RequestStatus = 'PENDING' | 'ACKNOWLEDGED' | 'IN_PROGRESS' | 'RESOLVED';
+
+export interface LogisticsRequest {
+  id: string;
+  request_number: string;
+  created_by?: string;
+  created_by_name: string;
+  created_by_role: string;
+  zone: LogisticsZone;
+  request_type: RequestType;
+  priority: RequestPriority;
+  title: string;
+  description: string;
+  requested_supply?: string;
+  requested_quantity?: number;
+  unit?: string;
+  status: RequestStatus;
+  main_head_response?: string;
+  acknowledged_at?: string;
+  in_progress_at?: string;
+  resolved_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RequestHistoryItem {
+  id: string;
+  request_id: string;
+  action: string;
+  performed_by: string;
+  performed_by_role: string;
+  message?: string;
+  created_at: string;
+}
+
+export interface ZonalNotification {
+  id: string;
+  recipient_role: UserRole | 'ALL';
+  recipient_zone?: LogisticsZone | null;
+  request_id?: string;
+  request_number?: string;
+  title: string;
+  message: string;
+  priority?: RequestPriority;
+  is_read: boolean;
+  created_at: string;
 }
 
 export interface LocationNode {
@@ -58,6 +119,8 @@ export interface SupplyItem {
   standard_pack_size?: number;
 }
 
+export type InventoryTrackingSource = 'Manual' | 'IoT' | 'Demo Sensor';
+
 export interface InventoryRecord {
   id: string;
   location_id: string;
@@ -69,6 +132,7 @@ export interface InventoryRecord {
   forecast_demand_7d: number;
   days_of_cover: number;
   risk_status: RiskLevel;
+  tracking_source?: InventoryTrackingSource;
   last_restocked_at?: string;
   supply?: SupplyItem;
   location?: LocationNode;
@@ -130,19 +194,47 @@ export interface DemandForecastPoint {
   riskLevel: RiskLevel;
 }
 
+export type AIDecision = 'SUFFICIENT' | 'MONITOR' | 'REPLENISH' | 'URGENT REPLENISH' | 'CRITICAL SHORTAGE';
+
+export interface AIRequirementItem {
+  id: string;
+  supply_name: string;
+  supply_category: SupplyCategory;
+  unit: string;
+  current_stock: number;
+  expected_incoming: number;
+  projected_available: number;
+  projected_demand: number;
+  safety_stock: number;
+  projected_shortfall: number;
+  decision: AIDecision;
+  priority: RequestPriority;
+  reasons: string[];
+  lead_time_days: number;
+  weather_impact_factor: number;
+  terrain_impact_factor: number;
+  transport_constraint_note: string;
+  suggested_order_qty: number;
+}
+
 export interface ForecastSummary {
   locationId: string;
   supplyCategory: SupplyCategory;
   horizonDays: number;
   currentStock: number;
+  expectedIncoming: number;
+  projectedAvailable: number;
   projectedDemand: number;
   safetyThreshold: number;
+  projectedShortfall: number;
+  aiDecision: AIDecision;
   confidenceScore?: number;
   isModelCalculated: boolean;
   modelLabel: string;
   riskLevel: RiskLevel;
   riskReasons: string[];
   points: DemandForecastPoint[];
+  aiRequirements?: AIRequirementItem[];
 }
 
 export interface AlertItem {
@@ -161,6 +253,9 @@ export interface AlertItem {
   is_acknowledged: boolean;
   status: 'ACTIVE' | 'ACKNOWLEDGED' | 'RESOLVED';
   created_at: string;
+  acknowledged_at?: string;
+  resolved_at?: string;
+  updated_at?: string;
 }
 
 export interface DataSourceStatus {

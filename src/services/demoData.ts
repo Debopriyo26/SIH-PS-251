@@ -7,11 +7,15 @@ import {
   WeatherForecastDay,
   AlertItem, 
   DataSourceStatus,
-  DemandForecastPoint
+  DemandForecastPoint,
+  LogisticsZone
 } from '../types';
+import { resolveLocationId, getLocationZoneName, matchesZone, ZONES_CONFIG } from '../lib/zones';
+
+export { resolveLocationId, getLocationZoneName, matchesZone, ZONES_CONFIG };
 
 export const PUBLIC_DATA_DISCLAIMER = 
-  "Geographic locations represent public regions. Inventory, transport and readiness values are synthetic demonstration data and do not represent actual military operations.";
+  "Geographic locations are public regional references. Logistics and inventory values are synthetic demonstration data.";
 
 export const DEMO_LOCATIONS: LocationNode[] = [
   {
@@ -463,8 +467,8 @@ export const DEMO_ALERTS: AlertItem[] = [
     location_name: 'Srinagar Logistics Zone',
     category: 'Fuel',
     title: 'Fuel Demand Exceeds Projected Stock Buffer',
-    message: 'Fuel demand is projected to exceed current available inventory within the 7-day forecast horizon (Days of Cover: 9.4 days vs 14-day mission requirement).',
-    root_cause: 'Projected demand increase (+24%) + inventory approaching safety threshold (3,500L) + rain pass slowdown.',
+    message: 'Fuel demand is projected to exceed current available inventory within the 7-day forecast horizon (Days of Cover: 7.8 days vs 14-day mission requirement).',
+    root_cause: 'Projected demand increase (+24%) + inventory approaching safety threshold (8,000L) + rain pass slowdown.',
     recommendations: 'Dispatch TR-001 heavy carrier from Ahmedabad Logistics Base with 8,000 L fuel reserve.',
     is_acknowledged: false,
     status: 'ACTIVE',
@@ -492,7 +496,7 @@ export const DEMO_ALERTS: AlertItem[] = [
     location_name: 'Srinagar Logistics Zone',
     category: 'Medical',
     title: 'Medical Trauma Kit Depletion Risk',
-    message: 'Srinagar Logistics Zone has only 5.2 days of medical trauma kits remaining (145 kits in stock vs 210 projected requirement).',
+    message: 'Srinagar Logistics Zone has approximately 5.1 days of medical trauma kits remaining (180 kits in stock vs 280 projected requirement).',
     root_cause: 'Recent deployment surge in high-altitude frostbite treatments coinciding with road transit delay.',
     recommendations: 'Authorize priority emergency express courier dispatch from Ahmedabad Base.',
     is_acknowledged: false,
@@ -507,12 +511,76 @@ export const DEMO_ALERTS: AlertItem[] = [
     location_name: 'Kutch Logistics Zone',
     category: 'Water',
     title: 'Purified Water Reserve Below Safety Ceiling',
-    message: 'Bulk potable water reserves (4,200 L) are at 5.1 Days of Cover against high salinity environment.',
+    message: 'Bulk potable water reserves (11,500 L) are at 8.2 Days of Cover against high salinity environment.',
     root_cause: 'Auxiliary desalination plant undergoing maintenance.',
     recommendations: 'Reassign TR-004 convoy unit from Ahmedabad to deliver thermal bowsers.',
     is_acknowledged: false,
     status: 'ACTIVE',
     created_at: '2026-10-02T06:00:00Z'
+  },
+  {
+    id: 'alt-005',
+    alert_type: 'Inventory',
+    severity: 'MEDIUM',
+    location_id: 'loc-jaisalmer',
+    location_name: 'Jaisalmer Logistics Zone',
+    category: 'General Supplies',
+    title: 'Extreme Weather Protective Gear Reorder Alert',
+    message: 'Stock levels of extreme heat protective clothing approaching reorder threshold (3,800 units remaining).',
+    root_cause: 'Seasonal deployment replenishment cycle due.',
+    recommendations: 'Consolidate scheduled freight order with Western Sector central depot.',
+    is_acknowledged: true,
+    status: 'ACKNOWLEDGED',
+    created_at: '2026-10-02T03:15:00Z',
+    acknowledged_at: '2026-10-02T03:45:00Z'
+  },
+  {
+    id: 'alt-006',
+    alert_type: 'Transport',
+    severity: 'LOW',
+    location_id: 'loc-ahmedabad',
+    location_name: 'Ahmedabad Logistics Base',
+    title: 'Fleet Carrier TR-006 Routine Inspection',
+    message: 'Asset scheduled for routine chassis and hydraulic diagnostics before next long-range corridor dispatch.',
+    root_cause: 'Routine scheduled milestone inspection.',
+    recommendations: 'Complete 50-point diagnostic checklist prior to clearing for Western Sector transit.',
+    is_acknowledged: true,
+    status: 'ACKNOWLEDGED',
+    created_at: '2026-10-02T02:00:00Z',
+    acknowledged_at: '2026-10-02T02:30:00Z'
+  },
+  {
+    id: 'alt-007',
+    alert_type: 'Inventory',
+    severity: 'HIGH',
+    location_id: 'loc-kutch',
+    location_name: 'Kutch Logistics Zone',
+    category: 'Fuel',
+    title: 'Fuel Bowser Transfer Completed',
+    message: 'Reserve fuel buffer replenished to 9,800 Liters following scheduled coastal tanker delivery.',
+    root_cause: 'Previous fuel drawdown resolved by maritime replenishment barge.',
+    recommendations: 'Verify depot storage pump seals and resume standard burn monitoring.',
+    is_acknowledged: true,
+    status: 'RESOLVED',
+    created_at: '2026-10-01T14:00:00Z',
+    acknowledged_at: '2026-10-01T15:00:00Z',
+    resolved_at: '2026-10-01T18:30:00Z'
+  },
+  {
+    id: 'alt-008',
+    alert_type: 'Weather',
+    severity: 'MEDIUM',
+    location_id: 'loc-jaisalmer',
+    location_name: 'Jaisalmer Logistics Zone',
+    title: 'Dust Squall Warning Cleared',
+    message: 'High wind advisory for western corridor has passed; visibility restored to 10+ km.',
+    root_cause: 'Passing thermal depression in the desert sector.',
+    recommendations: 'Resume normal standard transit schedule for daylight convoys.',
+    is_acknowledged: true,
+    status: 'RESOLVED',
+    created_at: '2026-10-01T10:00:00Z',
+    acknowledged_at: '2026-10-01T10:45:00Z',
+    resolved_at: '2026-10-01T16:00:00Z'
   }
 ];
 
@@ -546,18 +614,18 @@ export const DEMO_DATA_SOURCES: DataSourceStatus[] = [
     notes: 'Row Level Security applied. Anonymous updates restricted to authenticated officers.'
   },
   {
-    id: 'src-osm',
-    code: 'OSM',
-    name: 'OpenStreetMap Standard Tiles',
-    source_type: 'GIS Cartography Layer',
-    endpoint_url: 'https://tile.openstreetmap.org',
+    id: 'src-bhuvan',
+    code: 'BHUVAN',
+    name: 'Bhuvan Geospatial Portal (ISRO / NRSC)',
+    source_type: 'Government of India Geospatial WMS',
+    endpoint_url: 'https://bhuvan-vec1.nrsc.gov.in/bhuvan/gwc/service/wms',
     status: 'CONNECTED',
-    last_sync_at: 'Tile CDN active',
-    records_ingested: 450,
-    latency_ms: 65,
-    purpose: 'High-contrast topographic geographic base tiles.',
-    source: 'OpenStreetMap Foundation CDN',
-    notes: 'Reliable global standard cartographic tile stream.'
+    last_sync_at: 'WMS Service active',
+    records_ingested: 620,
+    latency_ms: 55,
+    purpose: 'National thematic vector & raster geospatial demonstration layer.',
+    source: 'National Remote Sensing Centre (ISRO) & Survey of India',
+    notes: 'Official Government of India geospatial services. Public administrative demonstration boundaries only.'
   },
   {
     id: 'src-data-gov',
@@ -593,23 +661,28 @@ export function generateForecastTimeline(baseStock: number = 4820, dailyBurn: nu
   const points: DemandForecastPoint[] = [];
   const days = ['26 Sep', '27 Sep', '28 Sep', '29 Sep', '30 Sep', '01 Oct', '02 Oct (Today)', '03 Oct', '04 Oct', '05 Oct', '06 Oct', '07 Oct', '08 Oct', '09 Oct'];
   
+  // Safe base burn - always strictly positive
+  const safeDailyBurn = Math.max(1, dailyBurn);
+
   for (let i = 0; i < 14; i++) {
     const isHistorical = i < 7;
-    const baseDemand = dailyBurn * (1 + (i - 6) * 0.035);
-    const noise = Math.sin(i * 1.8) * 35;
-    const demand = Math.round(baseDemand + noise);
+    // Proportional variation (±12% max) rather than fixed additive unit offsets that cause negative demand
+    const varianceFactor = 1 + (Math.sin(i * 1.35) * 0.12) + ((i - 6) * 0.015);
+    const demand = Math.max(1, Math.round(safeDailyBurn * Math.max(0.65, varianceFactor)));
+    const histDemand = isHistorical ? Math.max(1, Math.round(safeDailyBurn * (1 + Math.sin(i * 1.1) * 0.09))) : undefined;
     const rainfall = i >= 6 && i <= 8 ? (i === 7 ? 22 : 18) : (i === 6 ? 10 : 0);
     
     points.push({
       date: days[i],
-      historicalDemand: isHistorical ? Math.round(dailyBurn + Math.sin(i) * 30 - 20) : undefined,
+      historicalDemand: histDemand,
       forecastDemand: demand,
-      upperConfidence: Math.round(demand * 1.12),
-      lowerConfidence: Math.round(demand * 0.88),
+      upperConfidence: Math.max(demand, Math.round(demand * 1.12)),
+      lowerConfidence: Math.max(1, Math.round(demand * 0.88)),
       rainfallMm: rainfall,
-      riskLevel: demand > dailyBurn * 1.2 ? 'HIGH' : (demand > dailyBurn * 1.05 ? 'MODERATE' : 'LOW')
+      riskLevel: demand > safeDailyBurn * 1.2 ? 'HIGH' : (demand > safeDailyBurn * 1.05 ? 'MODERATE' : 'LOW')
     });
   }
   
   return points;
 }
+

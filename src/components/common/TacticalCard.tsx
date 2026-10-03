@@ -21,26 +21,26 @@ export const TacticalCard: React.FC<TacticalCardProps> = ({
 }) => {
   const glowMap = {
     none: '',
-    green: 'tactical-glow-green border-[#3FA34D]/40',
-    amber: 'tactical-glow-amber border-[#D39B32]/40',
-    red: 'tactical-glow-red border-[#C43C3C]/40',
+    green: 'border-l-4 border-l-[#2F6B3C]',
+    amber: 'border-l-4 border-l-[#A16207]',
+    red: 'border-l-4 border-l-[#B42318]',
   };
 
   return (
     <div
-      className={`tactical-border rounded-sm transition-all duration-200 bg-[#101B13] border border-[#263F2B] p-5 shadow-lg ${glowMap[glow]} ${className}`}
+      className={`bg-white border border-[#D8DFD5] rounded-xs p-5 shadow-xs transition-all duration-200 hover:border-[#6B7444] ${glowMap[glow]} ${className}`}
     >
       {(title || headerAction || badge) && (
-        <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-[#1A2C1E]">
+        <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-[#F0F4EE]">
           <div>
             {title && (
-              <h3 className="font-tactical font-semibold tracking-wider text-[#E7E9E2] text-sm uppercase flex items-center gap-2">
-                <span className="w-1.5 h-3.5 bg-[#B5A47A] inline-block rounded-xs"></span>
+              <h3 className="font-tactical font-bold tracking-wider text-[#1F2933] text-sm uppercase flex items-center gap-2">
+                <span className="w-1.5 h-3.5 bg-[#355E3B] inline-block rounded-xs"></span>
                 {title}
               </h3>
             )}
             {subtitle && (
-              <p className="font-mono text-[11px] text-[#8B9B8E] mt-0.5 tracking-tight">
+              <p className="font-mono text-[11px] text-[#52606D] mt-0.5 tracking-tight">
                 {subtitle}
               </p>
             )}

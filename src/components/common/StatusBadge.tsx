@@ -13,38 +13,38 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
 }) => {
   const norm = (status || '').toUpperCase();
 
-  let bg = 'bg-[#1A2C1E]';
-  let text = 'text-[#8B9B8E]';
-  let border = 'border-[#263F2B]';
-  let dot = 'bg-[#8B9B8E]';
+  let bg = 'bg-[#F0F4EE]';
+  let text = 'text-[#52606D]';
+  let border = 'border-[#D8DFD5]';
+  let dot = 'bg-[#6B7444]';
 
   if (norm === 'LOW' || norm === 'OPERATIONAL' || norm === 'CONNECTED' || norm === 'GREEN' || norm === 'AVAILABLE' || norm === 'RESOLVED') {
-    bg = 'bg-[rgba(63,163,77,0.12)]';
-    text = 'text-[#4ade80]';
-    border = 'border-[#3fa34d]/40';
-    dot = 'bg-[#3fa34d]';
+    bg = 'bg-[#E8F5E9]';
+    text = 'text-[#2F6B3C]';
+    border = 'border-[#A5D6A7]';
+    dot = 'bg-[#2F6B3C]';
   } else if (norm === 'MODERATE' || norm === 'ATTENTION' || norm === 'YELLOW' || norm === 'ACKNOWLEDGED' || norm === 'IN_TRANSIT' || norm === 'MEDIUM') {
-    bg = 'bg-[rgba(211,155,50,0.12)]';
-    text = 'text-[#fbbf24]';
-    border = 'border-[#d39b32]/40';
-    dot = 'bg-[#d39b32]';
+    bg = 'bg-[#FEF08A]/70';
+    text = 'text-[#A16207]';
+    border = 'border-[#FDE047]';
+    dot = 'bg-[#A16207]';
   } else if (norm === 'HIGH' || norm === 'ORANGE' || norm === 'MAINTENANCE') {
-    bg = 'bg-[rgba(211,155,50,0.2)]';
-    text = 'text-[#f59e0b]';
-    border = 'border-[#d39b32]/60';
-    dot = 'bg-[#f59e0b]';
+    bg = 'bg-[#FFEDD5]';
+    text = 'text-[#C2410C]';
+    border = 'border-[#FDBA74]';
+    dot = 'bg-[#C2410C]';
   } else if (norm === 'CRITICAL' || norm === 'RED' || norm === 'UNAVAILABLE' || norm === 'OFFLINE') {
-    bg = 'bg-[rgba(196,60,60,0.18)]';
-    text = 'text-[#f87171]';
-    border = 'border-[#c43c3c]/60';
-    dot = 'bg-[#c43c3c]';
+    bg = 'bg-[#FEE4E2]';
+    text = 'text-[#B42318]';
+    border = 'border-[#FDA29B]';
+    dot = 'bg-[#B42318]';
   }
 
   const sizeClasses = size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs';
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 font-mono font-medium tracking-wider uppercase rounded-sm border ${bg} ${text} ${border} ${sizeClasses}`}
+      className={`inline-flex items-center gap-1.5 font-mono font-semibold tracking-wider uppercase rounded-xs border ${bg} ${text} ${border} ${sizeClasses}`}
     >
       <span className={`w-1.5 h-1.5 rounded-full ${dot} ${pulse ? 'animate-ping' : ''}`} />
       <span>{status}</span>

@@ -18,18 +18,18 @@ export const HelpPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="border-b border-[#1A2C1E] pb-3">
-        <h1 className="font-tactical text-2xl font-bold tracking-wider text-[#E7E9E2] uppercase flex items-center gap-2.5">
-          <span className="w-2.5 h-6 bg-[#B5A47A] inline-block"></span>
-          Help & Documentation
+      <div className="border-b border-[#D8DFD5] pb-4">
+        <h1 className="font-tactical text-2xl font-bold tracking-wider text-[#1F2933] uppercase flex items-center gap-2.5">
+          <span className="w-2.5 h-6 bg-[#355E3B] inline-block rounded-xs"></span>
+          Help & Operational Documentation
         </h1>
-        <p className="font-mono text-xs text-[#8B9B8E] mt-0.5">
+        <p className="font-mono text-xs text-[#52606D] mt-0.5">
           Quick start guides, operational metric definitions, and data integrations
         </p>
       </div>
 
       {/* 4 Clean Master Navigation Tabs */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-[#1A2C1E] pb-2 font-mono text-xs">
+      <div className="flex flex-wrap items-center gap-2 border-b border-[#D8DFD5] pb-2 font-mono text-xs">
         {[
           { id: 'quickstart' as const, label: '🚀 Quick Start (Workflow)' },
           { id: 'metrics' as const, label: '📊 Metric & Risk Definitions' },
@@ -39,10 +39,10 @@ export const HelpPage: React.FC = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded-xs transition-colors cursor-pointer ${
+            className={`px-4 py-2 rounded-xs transition-colors cursor-pointer font-bold ${
               activeTab === tab.id
-                ? 'bg-[#263F2B] text-[#E7E9E2] font-semibold border border-[#596B3A]'
-                : 'bg-[#101B13] text-[#8B9B8E] hover:text-[#E7E9E2] border border-[#1A2C1E]'
+                ? 'bg-[#355E3B] text-white border border-[#1F3D27] shadow-xs'
+                : 'bg-white text-[#52606D] hover:text-[#1F2933] border border-[#D8DFD5]'
             }`}
           >
             {tab.label}
@@ -52,83 +52,84 @@ export const HelpPage: React.FC = () => {
 
       {/* Tab 1: Quick Start Workflow */}
       {activeTab === 'quickstart' && (
-        <div className="bg-[#101B13] border border-[#263F2B] p-5 rounded-xs space-y-4 font-mono text-xs shadow-md">
-          <span className="font-tactical font-semibold text-xs text-[#E7E9E2] uppercase tracking-wider block border-b border-[#1A2C1E] pb-2">
-            7-Step Standard Operational Workflow
+        <div className="bg-white border border-[#D8DFD5] p-5 rounded-xs space-y-4 font-mono text-xs shadow-xs">
+          <span className="font-tactical font-bold text-xs text-[#1F2933] uppercase tracking-wider block border-b border-[#F0F4EE] pb-2">
+            Standard Operational Workflow
           </span>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {[
-              { step: '1', title: 'Open Dashboard', desc: 'Scan the 4 top KPI cards (Readiness, Weather Risk, Transport, Active Alerts) for an immediate high-level overview.' },
-              { step: '2', title: 'Review Alerts', desc: 'Check the priority predictive alert to see which supply item may face shortfalls within 7 days.' },
-              { step: '3', title: 'Select a Zone', desc: 'Use the Zone dropdown to filter data for Srinagar, Jaisalmer, Ahmedabad, or Kutch.' },
-              { step: '4', title: 'Inspect Map', desc: 'Navigate to Locations to inspect the GIS map with color-coded status markers.' },
-              { step: '5', title: 'Check Supplies', desc: 'Open Supplies to review on-hand stock levels, daily burn rates, and days of cover.' },
-              { step: '6', title: 'Review Forecast', desc: 'Visit Forecast to inspect the 7, 14, or 30-day machine-learning consumption projections.' },
-              { step: '7', title: 'Run a Scenario', desc: 'Use the Simulator to test how severe weather or demand surges would affect your stock levels.' }
+              { step: '1', title: 'Open Dashboard', desc: 'Inspect Supply Readiness, Weather Risk, and Priority Shortage Alerts across all regional zones.' },
+              { step: '2', title: 'Review Bhuvan Map', desc: 'Interact with the official Government of India Bhuvan NRSC geospatial layer for Srinagar, Jaisalmer, Ahmedabad, and Kutch.' },
+              { step: '3', title: 'Inspect Supplies', desc: 'Review on-hand stock and days of cover. Adjust stock values with instant recalculation and Supabase persistence.' },
+              { step: '4', title: 'Evaluate Forecast', desc: 'Examine predicted demand curves cross-referenced against historical burn rates and IMD precipitation.' },
+              { step: '5', title: 'Run Simulator', desc: 'Stress-test inventory buffers under hypothetical demand surges or corridor disruptions.' },
+              { step: '6', title: 'Manage Alerts', desc: 'Filter by location and severity. Acknowledge warnings or mark directives resolved with automatic archiving.' },
             ].map((s) => (
-              <div key={s.step} className="p-3 bg-[#07100B] border border-[#1A2C1E] rounded-xs space-y-1">
-                <div className="flex items-center gap-2 text-[#B5A47A] font-bold">
-                  <span className="w-5 h-5 rounded-full bg-[#263F2B] border border-[#596B3A] flex items-center justify-center text-[10px]">
+              <div key={s.step} className="p-3 bg-[#F7F8F4] border border-[#D8DFD5] rounded-xs space-y-1">
+                <div className="flex items-center gap-2 text-[#355E3B] font-bold">
+                  <span className="w-5 h-5 rounded-full bg-[#E8EEE5] text-[#355E3B] border border-[#CAD3C8] flex items-center justify-center text-[10px]">
                     {s.step}
                   </span>
                   <span>{s.title}</span>
                 </div>
-                <p className="text-[11px] text-[#8B9B8E] leading-relaxed pl-7">
-                  {s.desc}
-                </p>
+                <p className="text-[#52606D] text-[11px] leading-relaxed pl-7">{s.desc}</p>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Tab 2: Metric & Risk Definitions */}
+      {/* Tab 2: Metric Definitions */}
       {activeTab === 'metrics' && (
-        <div className="bg-[#101B13] border border-[#263F2B] p-5 rounded-xs space-y-4 font-mono text-xs shadow-md">
-          <span className="font-tactical font-semibold text-xs text-[#E7E9E2] uppercase tracking-wider block border-b border-[#1A2C1E] pb-2">
-            Plain-English Metric Glossary
+        <div className="bg-white border border-[#D8DFD5] p-5 rounded-xs space-y-4 font-mono text-xs shadow-xs">
+          <span className="font-tactical font-bold text-xs text-[#1F2933] uppercase tracking-wider block border-b border-[#F0F4EE] pb-2">
+            Key Metric Calculations
           </span>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {[
-              { term: 'Supply Readiness (%)', def: 'Percentage of inventory currently above mandatory safety thresholds across all tracked supplies in a zone.' },
-              { term: 'Days of Cover', def: 'How many days current on-hand stock will last at the present daily consumption rate (Stock ÷ Daily Burn).' },
-              { term: 'Demand Forecast', def: 'Machine learning estimation of future daily consumption based on historical trends, troop strength, and weather.' },
-              { term: 'Weather Risk', def: 'Impact rating based on IMD precipitation and wind advisories that could slow road transport corridors.' },
-              { term: 'Transport Readiness', def: 'Percentage of the transport vehicle fleet currently available and operational for supply dispatch.' },
-              { term: 'Projected Shortage', def: 'Supply categories flagged to breach safety floors within the upcoming 7-day window.' },
-            ].map((m) => (
-              <div key={m.term} className="p-3 bg-[#07100B] border border-[#1A2C1E] rounded-xs space-y-1">
-                <strong className="text-xs text-[#E7E9E2] block">{m.term}</strong>
-                <p className="text-[11px] text-[#8B9B8E] leading-relaxed">{m.def}</p>
-              </div>
-            ))}
+          <div className="space-y-3">
+            <div className="p-3.5 bg-[#F7F8F4] border border-[#D8DFD5] rounded-xs space-y-1">
+              <strong className="text-[#1F2933] text-xs">Days of Cover:</strong>
+              <p className="text-[#52606D] text-[11px]">
+                Calculated as <code>Current Stock / Daily Consumption</code>. Indicates how many operating days current inventory can sustain before depletion.
+              </p>
+            </div>
+
+            <div className="p-3.5 bg-[#F7F8F4] border border-[#D8DFD5] rounded-xs space-y-1">
+              <strong className="text-[#1F2933] text-xs">Safety Threshold:</strong>
+              <p className="text-[#52606D] text-[11px]">
+                The mandatory emergency reserve cushion. Dropping below this threshold triggers immediate HIGH or CRITICAL alert directives.
+              </p>
+            </div>
+
+            <div className="p-3.5 bg-[#F7F8F4] border border-[#D8DFD5] rounded-xs space-y-1">
+              <strong className="text-[#1F2933] text-xs">Alert Severity Order:</strong>
+              <p className="text-[#52606D] text-[11px]">
+                Strict priority order: 1. CRITICAL (Weight 4) &gt; 2. HIGH (Weight 3) &gt; 3. MEDIUM (Weight 2) &gt; 4. LOW (Weight 1).
+              </p>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Tab 3: Data & Integrations */}
+      {/* Tab 3: Data Sources */}
       {activeTab === 'datasources' && (
-        <div className="bg-[#101B13] border border-[#263F2B] p-5 rounded-xs space-y-4 font-mono text-xs shadow-md">
-          <span className="font-tactical font-semibold text-xs text-[#E7E9E2] uppercase tracking-wider block border-b border-[#1A2C1E] pb-2">
-            Integrated Data Sources
+        <div className="bg-white border border-[#D8DFD5] p-5 rounded-xs space-y-4 font-mono text-xs shadow-xs">
+          <span className="font-tactical font-bold text-xs text-[#1F2933] uppercase tracking-wider block border-b border-[#F0F4EE] pb-2">
+            Connected Systems & Government Providers
           </span>
 
-          <div className="space-y-2.5">
-            {DEMO_DATA_SOURCES.map((src) => (
-              <div
-                key={src.code}
-                className="p-3 bg-[#07100B] border border-[#1A2C1E] rounded-xs flex flex-wrap items-center justify-between gap-3"
-              >
-                <div className="space-y-0.5">
+          <div className="space-y-3">
+            {DEMO_DATA_SOURCES.map((ds) => (
+              <div key={ds.id} className="p-3.5 bg-[#F7F8F4] border border-[#D8DFD5] rounded-xs space-y-2">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <strong className="text-xs text-[#E7E9E2]">{src.name}</strong>
-                    <span className="text-[10px] text-[#B5A47A]">({src.source_type})</span>
+                    <strong className="text-[#1F2933] text-sm">{ds.name}</strong>
+                    <span className="text-[10px] text-[#355E3B] font-bold">[{ds.code}]</span>
                   </div>
-                  <p className="text-[11px] text-[#8B9B8E]">{src.notes}</p>
+                  <StatusBadge status={ds.status} size="sm" />
                 </div>
-                <StatusBadge status={src.status} size="sm" />
+                <p className="text-[#52606D] text-[11px] leading-relaxed">{ds.notes}</p>
               </div>
             ))}
           </div>
@@ -137,19 +138,23 @@ export const HelpPage: React.FC = () => {
 
       {/* Tab 4: About & Disclaimer */}
       {activeTab === 'about' && (
-        <div className="bg-[#101B13] border border-[#263F2B] p-5 rounded-xs space-y-4 font-mono text-xs shadow-md">
-          <span className="font-tactical font-semibold text-xs text-[#E7E9E2] uppercase tracking-wider block border-b border-[#1A2C1E] pb-2">
+        <div className="bg-white border border-[#D8DFD5] p-6 rounded-xs space-y-4 font-mono text-xs shadow-xs">
+          <span className="font-tactical font-bold text-sm text-[#1F2933] uppercase tracking-wider block border-b border-[#F0F4EE] pb-2">
             About VYOMIX Platform
           </span>
 
-          <div className="space-y-3 text-[#8B9B8E] leading-relaxed text-xs">
-            <p>
-              <strong className="text-[#E7E9E2]">VYOMIX (Predictive Logistics Intelligence)</strong> is an enterprise platform that unites inventory, weather, transport, and consumption data to preempt supply shortages before they become critical.
-            </p>
-            <div className="p-3.5 bg-[#07100B] border border-[#1A2C1E] rounded-xs text-[11px] text-[#B5A47A] leading-relaxed">
-              <strong>Public Data Notice: </strong>
-              {PUBLIC_DATA_DISCLAIMER}
+          <p className="text-[#52606D] text-xs leading-relaxed">
+            VYOMIX is a predictive logistics decision support system integrating inventory management, geospatial cartography from official Government of India web services (Bhuvan — ISRO / NRSC), and machine learning demand forecasting.
+          </p>
+
+          <div className="p-4 bg-[#E8EEE5] border border-[#CAD3C8] rounded-xs space-y-2 text-[#1F2933]">
+            <div className="flex items-center gap-2 font-bold text-[#355E3B]">
+              <Info className="w-4 h-4" />
+              <span>Public Regional Demonstration Notice</span>
             </div>
+            <p className="text-[11px] leading-relaxed">
+              {PUBLIC_DATA_DISCLAIMER}
+            </p>
           </div>
         </div>
       )}

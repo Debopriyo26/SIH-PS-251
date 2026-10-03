@@ -5,6 +5,7 @@ Supports OPENWEATHER_API_KEY environment variable securely on server-side.
 """
 
 import os
+# pyrefly: ignore [missing-import]
 import httpx
 import logging
 from typing import Dict, Any, Optional

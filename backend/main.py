@@ -4,8 +4,11 @@ FastAPI Backend Application
 Tagline: Predict. Prepare. Deliver.
 """
 
+# pyrefly: ignore [missing-import]
 import uvicorn
+# pyrefly: ignore [missing-import]
 from fastapi import FastAPI, HTTPException, Query, Path
+# pyrefly: ignore [missing-import]
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 from datetime import datetime
@@ -328,7 +331,7 @@ def get_sources():
         "sources": [
             {"code": "IMD", "name": "India Meteorological Department", "status": "CONNECTED", "latency_ms": 112, "source_type": "Government API"},
             {"code": "SUPABASE", "name": "Supabase PostgreSQL & Realtime", "status": "CONNECTED", "latency_ms": 48, "source_type": "Relational DB"},
-            {"code": "OSM", "name": "OpenStreetMap", "status": "CONNECTED", "latency_ms": 65, "source_type": "GIS Cartography"},
+            {"code": "BHUVAN", "name": "Bhuvan (ISRO / NRSC & Survey of India)", "status": "CONNECTED", "latency_ms": 55, "source_type": "Government GIS WMS"},
             {"code": "DATA_GOV", "name": "data.gov.in Open Data", "status": "AVAILABLE", "latency_ms": 310, "source_type": "Open Data Portal"},
             {"code": "OPENWEATHER", "name": "OpenWeather API (Fallback)", "status": "OPTIONAL", "latency_ms": 180, "source_type": "Secondary Fallback"}
         ]
