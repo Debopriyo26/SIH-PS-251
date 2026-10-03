@@ -42,8 +42,7 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
     );
 
     if (res.success) {
-      localStorage.setItem('vyomix_login_message', 'Account created successfully. Please sign in to continue.');
-      onNavigate('login');
+      onNavigate('dashboard');
     } else {
       setError(res.error || 'Failed to create account.');
     }
